@@ -304,26 +304,26 @@ STATUS_CODE howmuch(const int day, const int month, const int year, const char f
     tm.tm_sec = cur_tm.tm_sec;
     const time_t end = mktime(&tm);
 
-    long long diff = (long long) difftime(cur_t, end);
+    double diff = difftime(cur_t, end);
     switch (flag) {
         case 's': {
-            printf("Разница в секундах == %lld\n", diff);
+            printf("Разница в секундах == %lld\n", (long long) diff);
         }
         break;
         case 'm': {
             diff /= 60;
-            printf("Разница в минутах == %lld\n", diff);
+            printf("Разница в минутах == %lld\n", (long long) diff);
         }
         break;
         case 'h': {
             diff /= 3600;
-            printf("Разница в часах == %lld\n", diff);
+            printf("Разница в часах == %lld\n", (long long) diff);
         }
         break;
         case 'y': {
             diff /= (3600 * 24 * 365);
             // const long years = cur_tm.tm_year - tm.tm_year;
-            printf("Разница в годах == %lld\n", diff);
+            printf("Разница в годах == %lld\n", (long long) diff);
         }
         break;
         default: {
@@ -409,7 +409,11 @@ int main(void) {
     }
     db.size = 0;
 
-    upload_db(&db, db_file);
+    if (SUCCESS != upload_db(&db, db_file)) {
+        fclose(db_file);
+        free(db.data);
+        return 1;
+    }
     fclose(db_file);
 
     /* приветствие: входрега */
@@ -547,7 +551,11 @@ int main(void) {
     }
 
     db_file = fopen("users.db", "wb");
-    save_db(&db, db_file);
+    if (SUCCESS != save_db(&db, db_file)) {
+        fclose(db_file);
+        free(db.data);
+        return 1;
+    }
 
     free(db.data);
     fclose(db_file);
