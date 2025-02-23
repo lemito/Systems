@@ -53,6 +53,59 @@ int check_login(const char *login) {
     return 1;
 }
 
+__uint8_t time_check(const int day, const int month, const int year) {
+    // int day, month, year;
+    // if (sscanf(time, "%d.%d.%d", &day, &month, &year) != 3) {
+    //     return 0;
+    // }
+    if (month <= 0 || month > 12) {
+        return 0;
+    }
+    if (year < 1900 || year > 2025) {
+        return 0;
+    }
+
+    char flag = 0; // дней в текущем месяце
+
+    switch (month) {
+        case 1:
+        case 3:
+        case 5:
+        case 7:
+        case 8:
+        case 10:
+        case 12: {
+            flag = 31;
+        }
+        break;
+        case 4:
+        case 6:
+        case 9:
+        case 11: {
+            flag = 30;
+        }
+        break;
+        case 2: {
+            if ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)) {
+                flag = 29;
+            } else {
+                flag = 28;
+            }
+        }
+        break;
+        default: {
+            return 0;
+        }
+        break;
+    }
+    if (day <= 0 || day > flag) {
+        return 0;
+    }
+
+    return 1;
+}
+
+
 user_t *user_is_contain(const db_t *db, const char *login) {
     for (int i = 0; i < db->size; i++) {
         if (strcmp(login, db->data[i]->name) == 0) {
@@ -136,15 +189,15 @@ STATUS_CODE sign_in_up(db_t *const db, user_t **res_user) {
                 }
 
                 if (user->PIN != iput_pin) {
-                    printf("Упсик, неправильный логин\n");
+                    printf("Упсик, неправильный PIN\n");
                     continue;
                 }
 
-                printf("Добро пожаловать");
+                printf("Добро пожаловать\n");
                 break;
             }
             if (user->limit != -1) {
-                printf("Ой-ой. У вас есть лимит по командам = %ld", user->limit);
+                printf("Ой-ой. У вас есть лимит по командам = %ld\n", user->limit);
             }
             *res_user = user;
         }
@@ -235,7 +288,49 @@ STATUS_CODE get_date(void) {
     return SUCCESS;
 }
 
-STATUS_CODE howmuch(void) {
+STATUS_CODE howmuch(const int day, const int month, const int year, const char flag) {
+    const time_t cur_t = time(NULL); // UNIX времечко
+    if (cur_t == -1) {
+        return INPUT_ERROR;
+    }
+    const struct tm cur_tm = *localtime(&cur_t); // времечко UNIX -> структура
+
+    struct tm tm;
+    tm.tm_year = year - 1900;
+    tm.tm_mon = month - 1;
+    tm.tm_mday = day;
+    tm.tm_hour = cur_tm.tm_hour;
+    tm.tm_min = cur_tm.tm_min;
+    tm.tm_sec = cur_tm.tm_sec;
+    const time_t end = mktime(&tm);
+
+    long long diff = (long long) difftime(cur_t, end);
+    switch (flag) {
+        case 's': {
+            printf("Разница в секундах == %lld\n", diff);
+        }
+        break;
+        case 'm': {
+            diff /= 60;
+            printf("Разница в минутах == %lld\n", diff);
+        }
+        break;
+        case 'h': {
+            diff /= 3600;
+            printf("Разница в часах == %lld\n", diff);
+        }
+        break;
+        case 'y': {
+            diff /= (3600 * 24 * 365);
+            // const long years = cur_tm.tm_year - tm.tm_year;
+            printf("Разница в годах == %lld\n", diff);
+        }
+        break;
+        default: {
+            printf("Нет такого флага!");
+        };
+    }
+
     return SUCCESS;
 }
 
@@ -289,6 +384,10 @@ STATUS_CODE save_db(const db_t *db, FILE *file) {
     return SUCCESS;
 }
 
+int give_sanctions(void) {
+    return 0;
+}
+
 int main(void) {
     FILE *db_file = NULL;
     db_t db;
@@ -331,7 +430,7 @@ int main(void) {
         help();
         printf("Выбери действие: \n>> ");
         st = scanf("%s", buffer);
-        CLEAR_BUF();
+        // CLEAR_BUF();
         if (st == EOF) {
             usage = 0;
             printf("Пока-пока\n");
@@ -345,19 +444,96 @@ int main(void) {
         } else if (strcmp(buffer, "Time") == 0) {
             if (SUCCESS != get_time()) {
                 printf("Не удалось получить время!\n");
-                if (user->limit != -1) { user->cmd_cnt++; }
             };
+            if (user->limit != -1) { user->cmd_cnt++; }
         } else if (strcmp(buffer, "Date") == 0) {
             if (SUCCESS != get_date()) {
                 printf("Не удалось получить дату!\n");
-                if (user->limit != -1) { user->cmd_cnt++; }
             };
+            if (user->limit != -1) { user->cmd_cnt++; }
         } else if (strcmp(buffer, "Howmuch") == 0) {
-            howmuch();
+            buffer[0] = 0;
+            int day, mon, year;
+            char flag = 0;
+            st = scanf("%d.%d.%d -%c", &day, &mon, &year, &flag);
+            if (st != 4) {
+                printf("ошибочка...");
+                continue;
+            }
+            CLEAR_BUF();
+            if (0 == time_check(day, mon, year)) {
+                printf("Некорректная дата!1!!11!11\n");
+                continue;
+            }
+
+            const STATUS_CODE stat = howmuch(day, mon, year, flag);
+            if (stat == INPUT_ERROR) {
+                printf("Упс... Ошибочка ввода\n");
+            }
             if (user->limit != -1) { user->cmd_cnt++; }
         } else if (strcmp(buffer, "Logout") == 0) {
+            if (sign_in_up(&db, &user) != SUCCESS) {
+                free(db.data);
+                fclose(db_file);
+                return 1;
+            }
+
+            if (user == NULL) {
+                free(db.data);
+                fclose(db_file);
+                return NULL_PTR;
+            }
             if (user->limit != -1) { user->cmd_cnt++; }
         } else if (strcmp(buffer, "Sanctions") == 0) {
+            buffer[0] = 0;
+            user_t *for_ban_user;
+            char login[BUFSIZ / 4];
+            ssize_t ll;
+            int pass;
+            const int etalon = 12345;
+
+            for (;;) {
+                // printf("Введи имя пользователя(login): ");
+                st = scanf("%s %ld", buffer, &ll);
+                CLEAR_BUF();
+
+                if (st != 2) {
+                    printf("Ошибка! Формат ввода: <login> <cnt>\n");
+                    continue;
+                }
+                if (strlen(buffer) > 7) {
+                    printf("Упсик... Ток 6 символов можно :(\n");
+                    continue;
+                }
+                if (0 == check_login(buffer)) {
+                    printf("Ошибка!!!! Используй латиницу и циферки\n");
+                    continue;
+                }
+
+                if ((for_ban_user = user_is_contain(&db, buffer)) == NULL) {
+                    printf("Нет такого пользователя\n!");
+                    continue;
+                }
+                if (ll < -1) { printf("Неа, -1 - снять ограничение, остальные - натуральные значения"); }
+
+                break;
+            }
+            // printf("Введите ограничение для пользователя:\n >>");
+            buffer[0] = '\0';
+            printf("Введите кодовое слово: >> ");
+            st = scanf("%d", &pass);
+            CLEAR_BUF();
+            if (st != 1) {
+                printf("Введите число!");
+                continue;
+            }
+            if (pass == etalon) {
+                for_ban_user->limit = ll;
+                printf("Для %s сменен лимит на %ld\n", for_ban_user->name, for_ban_user->limit);
+            } else {
+                printf("А обманыывать плохо...");
+            }
+
             if (user->limit != -1) { user->cmd_cnt++; }
         } else {
             printf("Нет такой команды\n");
