@@ -302,6 +302,10 @@ STATUS_CODE howmuch(const int day, const int month, const int year, const char f
     tm.tm_hour = cur_tm.tm_hour;
     tm.tm_min = cur_tm.tm_min;
     tm.tm_sec = cur_tm.tm_sec;
+    tm.tm_isdst = 0;
+    tm.tm_wday = 0;
+    tm.tm_yday = 0;
+    tm.tm_gmtoff = 0;
     const time_t end = mktime(&tm);
 
     double diff = difftime(cur_t, end);
@@ -402,11 +406,12 @@ int main(void) {
         return ERROR_OPEN;
     }
 
-    db.data = malloc(sizeof(user_t));
-    if (db.data == NULL) {
-        fclose(db_file);
-        return MEMORY_ERROR;
-    }
+    // db.data = malloc(sizeof(user_t));
+    // if (db.data == NULL) {
+    //     fclose(db_file);
+    //     return MEMORY_ERROR;
+    // }
+    db.data = NULL;
     db.size = 0;
 
     if (SUCCESS != upload_db(&db, db_file)) {
@@ -557,6 +562,9 @@ int main(void) {
         return 1;
     }
 
+    for (size_t i = 0; i < db.size; i++) {
+        free(db.data[i]);
+    }
     free(db.data);
     fclose(db_file);
     return 0;
