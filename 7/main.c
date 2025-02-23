@@ -83,7 +83,7 @@ int main(const int argc, char *argv[]) {
 			return INPUT_ERROR;
 		}
 
-		printf("%s\n", argv[i]);
+		printf("%s:\n", argv[i]);
 		const STATUS_CODE status = dir_browse(argv[i]);
 		if (status != SUCCESS) { return status; }
 		printf("===\n");
