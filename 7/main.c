@@ -30,35 +30,35 @@ STATUS_CODE dir_browse(const char *path) {
 
 		switch (dentry->d_type) {
 			case DT_DIR: {
-				printf("директория: %s\n", name);
+				printf("директория: %s ino = %lu\n", name, dentry->d_ino);
 			}
 			break;
 			case DT_REG: {
-				printf("файл: %s\n", name);
+				printf("файл: %s ino = %lu\n", name, dentry->d_ino);
 			}
 			break;
 			case DT_LNK: {
-				printf("симв. ссылка: %s\n", name);
+				printf("симв. ссылка: %s ino = %lu\n", name, dentry->d_ino);
 			}
 			break;
 			case DT_UNKNOWN: {
-				printf("?: %s\n", name);
+				printf("?: %s ino = %lu\n", name, dentry->d_ino);
 			}
 			break;
 			case DT_BLK: {
-				printf("диск (блочное устройство): %s\n", name);
+				printf("диск (блочное устройство): %s ino = %lu\n", name, dentry->d_ino);
 			}
 			break;
 			case DT_CHR: {
-				printf("диск (символьное устройство): %s\n", name);
+				printf("диск (символьное устройство): %s ino = %lu\n", name, dentry->d_ino);
 			}
 			break;
 			case DT_FIFO: {
-				printf("именнованный канал: %s\n", name);
+				printf("именнованный канал: %s ino = %lu\n", name, dentry->d_ino);
 			}
 			break;
 			case DT_SOCK: {
-				printf("сокет: %s\n", name);
+				printf("сокет: %s ino = %lu\n", name, dentry->d_ino);
 			}
 			break;
 			default: {
