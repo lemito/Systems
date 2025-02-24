@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 
 #include "../include/base.h"
 
@@ -33,12 +34,16 @@ STATUS_CODE do_action(FILE *file, char **action, char **attr) {
         const int N = *action[4] - '0';
         int mod = pow2(N);
     } else if (strncmp(*action, "copy", 4) == 0) {
+        const size_t len = strlen(*action);
+        int N = 0; // количество копий файлов
+        for (size_t i = 4; i < len; i++) {
+            N += (*action[i] - '0') * 10;
+        }
     } else if (strncmp(*action, "mask", 4) == 0) {
         unsigned int mask = 0;
         if (SUCCESS != str_to_uint(*attr, &mask, 16)) {
             return INPUT_ERROR;
         }
-
     } else if (strncmp(*action, "find", 4) == 0) {
     } else {
         return INPUT_ERROR;
