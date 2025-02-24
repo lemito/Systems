@@ -1,4 +1,65 @@
 //
 // Created by lemito on 2/24/25.
 //
-int main(void) { return 0; }
+#include <stdio.h>
+#include <sys/sem.h>
+#include "../include/base.h"
+
+#define SEM_NAME "/my_super_duper_semaphore"
+
+/**
+ * удобная штучка для управление семафорчиком
+ * @param semid id-шник семафора
+ * @param sem_ix порядковый номер семафора
+ * @param op то, что нужно прибавить
+ * @return always SUCCESS
+ */
+STATUS_CODE sem_op(const int semid, const int sem_ix, const short op) {
+    struct sembuf sem;
+    sem.sem_num = sem_ix; // над кем будем творить
+    sem.sem_op = op; // что будем творить
+    sem.sem_flg = 0;
+    // собственно, творим
+    if (-1 == semop(semid, &sem, 1)) {
+        return SEM_ERR;
+    }
+    return SUCCESS;
+}
+
+int main(void) {
+    int semid = 0;
+    int st = 0;
+    int PHILOSOPHER_CNT = 0;
+
+    for (;;) {
+        printf("Сколько философов сидят за столом? >> ");
+        st = scanf("%d", &PHILOSOPHER_CNT);
+        if (st != 1) {
+            printf("Введи натуральное целое чисоло\n");
+            return INPUT_ERROR;
+        }
+        if (PHILOSOPHER_CNT <= 0) {
+            printf("Введи натуральное целое чисоло\n");
+            return INPUT_ERROR;
+        }
+
+        break;
+    }
+
+
+    // semid = semget(semkey, PHILOSOPHER_CNT, IPC_CREAT | IPC_EXCL);
+    if ((semid = semget(IPC_PRIVATE, PHILOSOPHER_CNT, IPC_CREAT | IPC_EXCL)) == -1) {
+        printf("Ошибка создания семафора\n");
+        return SEM_ERR;
+    }
+
+
+
+
+    if (-1 == semctl(semid, 0, IPC_RMID)) {
+        printf("Не удалось удалить семафор\n");
+        return SEM_ERR;
+    }
+
+    return 0;
+}

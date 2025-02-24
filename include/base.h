@@ -6,12 +6,16 @@
 #define BASE_H
 
 enum STATUS_CODE {
-	SUCCESS = 0,
-	INPUT_ERROR = -1,
-	NULL_PTR = -2,
-	ERROR_OPEN = -3,
-	MEMORY_ERROR = -4, USER_NOT_CONTAIN, USER_IS_CONTAIN
+    SUCCESS = 0,
+    INPUT_ERROR,
+    NULL_PTR,
+    ERROR_OPEN,
+    MEMORY_ERROR,
+    USER_NOT_CONTAIN,
+    USER_IS_CONTAIN,
+    SEM_ERR
 };
+
 typedef enum STATUS_CODE STATUS_CODE;
 
 #define CLEAR_BUF() while (getchar() != '\n'){}
