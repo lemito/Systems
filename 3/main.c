@@ -28,7 +28,8 @@ STATUS_CODE sem_op(const int semid, const int sem_ix, const short op) {
     return SUCCESS;
 }
 
-void * WORKER(void * p) {
+void *WORKER(void *p) {
+    printf("Do some work\nWork work work\n");
     return NULL;
 }
 
@@ -64,8 +65,6 @@ int main(void) {
         return MEMORY_ERROR;
     }
 
-
-    // semid = semget(semkey, PHILOSOPHER_CNT, IPC_CREAT | IPC_EXCL);
     if ((semid = semget(IPC_PRIVATE, PHILOSOPHER_CNT, IPC_CREAT | IPC_EXCL)) == -1) {
         printf("Ошибка создания семафора\n");
         free(philosophers);
@@ -87,7 +86,7 @@ int main(void) {
     }
 
 
-    if (-1 == semctl(semid, 0, IPC_RMID)) {
+    if (-1 == semctl(semid, PHILOSOPHER_CNT, IPC_RMID)) {
         printf("Не удалось удалить семафор\n");
         free(philosophers);
         free(purege);
