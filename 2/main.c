@@ -1,4 +1,5 @@
 #include <limits.h>
+#include <math.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -167,7 +168,92 @@ STATUS_CODE find(FILE *file, const char **const attr) {
     return ERROR_OPEN;
 }
 
-STATUS_CODE do_action(FILE *file, const char **const action, const char **const attr, const char **const filename) {
+STATUS_CODE to_string(size_t src, char **res) {
+    if (src == 0) {
+        (*res) = (char *) malloc(2 * sizeof(char));
+        if ((*res) == NULL) {
+            return MEMORY_ERROR;
+        }
+        (*res)[0] = '0';
+        (*res)[1] = '\0';
+        return SUCCESS;
+    }
+    size_t len = (size_t) (log(src) / log(10)) + 1;
+    (*res) = (char *) malloc((len + 1) * sizeof(char));
+    if ((*res) == NULL) {
+        return MEMORY_ERROR;
+    }
+
+    (*res)[len] = '\0';
+
+    while (src > 0) {
+        (*res)[--len] = src % 10 + '0';
+        src /= 10;
+    }
+    return SUCCESS;
+}
+
+STATUS_CODE gen_new_name(char **filename, const size_t ix, char **res) {
+    if (filename == NULL || res == NULL) {
+        return INPUT_ERROR;
+    }
+
+    char *part2 = NULL;
+    to_string(ix, &part2);
+
+    const size_t len = strlen(*filename);
+    const size_t len2 = strlen(part2);
+    const size_t len3 = len + len2;
+    *res = (char *) malloc((len3 + 1) * sizeof(char));
+    if (*res == NULL) {
+        free(part2);
+        return MEMORY_ERROR;
+    }
+    (*res)[len3] = '\0';
+    if (NULL == strcpy(*res, *filename)) {
+        return MEMORY_ERROR;
+    }
+    if (NULL == strcat(*res, part2)) {
+        return MEMORY_ERROR;
+    }
+
+    free(part2);
+
+    return SUCCESS;
+}
+
+STATUS_CODE copy(FILE **file, const int i, const char **const filename) {
+    if (file == NULL || filename == NULL) {
+        return INPUT_ERROR;
+    }
+
+    FILE *filecpy = *file;
+
+    for (size_t j = 0; j < i; j++) {
+        const char *part1 = *filename;
+        char *res = NULL;
+
+        gen_new_name(&part1, j, &res);
+
+        FILE *new_file = fopen(res, "wb");
+        if (new_file == NULL) {
+            return ERROR_OPEN;
+        }
+
+        char ch;
+        while (fread(&ch, sizeof(char), 1, filecpy) != 0) {
+            fwrite(&ch, sizeof(char), 1, new_file);
+        }
+
+        fclose(new_file);
+        free(res);
+        fseek(filecpy, 0, SEEK_SET);
+    }
+
+    return SUCCESS;
+}
+
+STATUS_CODE do_action(FILE **file, const char **const action, const char **const attr, const char **const filename) {
     if (action == NULL || *action == NULL || attr == NULL || *attr == NULL ||
         file == NULL) {
         return INPUT_ERROR;
@@ -180,23 +266,23 @@ STATUS_CODE do_action(FILE *file, const char **const action, const char **const 
         const int N = (*action)[3] - '0';
         switch (N) {
             case 2: {
-                xor2(file);
+                xor2(*file);
             }
             break;
             case 3: {
-                xor3(file);
+                xor3(*file);
             }
             break;
             case 4: {
-                xor4(file);
+                xor4(*file);
             }
             break;
             case 5: {
-                xor5(file);
+                xor5(*file);
             }
             break;
             case 6: {
-                xor6(file);
+                xor6(*file);
             }
             break;
             default: {
@@ -207,8 +293,25 @@ STATUS_CODE do_action(FILE *file, const char **const action, const char **const 
     } else if (strncmp(*action, "copy", 4) == 0) {
         const size_t len = strlen(*action);
         int N = 0; // количество копий файлов
+        size_t pow = 1;
         for (size_t i = 4; i < len; i++) {
-            N += (*action[i] - '0') * 10;
+            N += ((*action)[i] - '0') * 1;
+            pow *= 10;
+        }
+        pid = fork();
+        switch (pid) {
+            case 0: {
+                if (SUCCESS != copy(file, N, filename)) {
+                    printf("mew");
+                    return ERROR_OPEN;
+                }
+                return SUCCESS;
+            }
+            case -1:
+                return FORK_ERROR;
+            default: {
+                wait(&status); // ждемс чилда, пока он там все поищет
+            }
         }
     } else if (strncmp(*action, "mask", 4) == 0) {
         unsigned int mask = 0;
@@ -219,7 +322,7 @@ STATUS_CODE do_action(FILE *file, const char **const action, const char **const 
         pid = fork();
         switch (pid) {
             case 0: {
-                if (SUCCESS != find(file, attr)) {
+                if (SUCCESS != find(*file, attr)) {
                     printf("%s не нашлось в %s :(", *attr, *filename);
                     return SUCCESS;
                 }
@@ -270,7 +373,7 @@ int main(const int argc, char *argv[]) {
             printf("Ошибка открытия файла");
             return INPUT_ERROR;
         }
-        do_action(file, &action, &attr, &argv[i]);
+        do_action(&file, &action, &attr, &argv[i]);
         fclose(file);
     }
 
