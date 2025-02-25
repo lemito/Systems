@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/wait.h>
 
 #include "../include/base.h"
 
@@ -134,43 +136,67 @@ STATUS_CODE xor6(FILE *file) {
     return SUCCESS;
 }
 
-STATUS_CODE do_action(FILE *file, char **action, char **attr) {
+STATUS_CODE find(FILE *file, const char **const attr) {
+    if (file == NULL || attr == NULL || *attr == NULL) {
+        return INPUT_ERROR;
+    }
+
+    const char *pattern = *attr;
+    const size_t len = strlen(pattern);
+
+    int ch = 0;
+    long long ix = 0;
+
+    while ((ch = fgetc(file)) != EOF) {
+        if (ch == pattern[ix]) {
+            ix++;
+        } else {
+            if (ix > 0 && ch == pattern[0]) {
+                ix = 1;
+            } else {
+                fseek(file, -ix, SEEK_CUR);
+                ix = 0;
+            }
+        }
+
+        if (ix == len) {
+            return SUCCESS;
+        }
+    }
+
+    return ERROR_OPEN;
+}
+
+STATUS_CODE do_action(FILE *file, const char **const action, const char **const attr, const char **const filename) {
     if (action == NULL || *action == NULL || attr == NULL || *attr == NULL ||
         file == NULL) {
         return INPUT_ERROR;
     }
 
+    pid_t pid = 0;
+    int status = 0;
+
     if (strncmp(*action, "xor", 3) == 0) {
         const int N = (*action)[3] - '0';
         switch (N) {
             case 2: {
-                if (SUCCESS != xor2(file)) {
-                    return INPUT_ERROR;
-                }
+                xor2(file);
             }
             break;
             case 3: {
-                if (SUCCESS != xor3(file)) {
-                    return INPUT_ERROR;
-                }
+                xor3(file);
             }
             break;
             case 4: {
-                if (SUCCESS != xor4(file)) {
-                    return INPUT_ERROR;
-                }
+                xor4(file);
             }
             break;
             case 5: {
-                if (SUCCESS != xor5(file)) {
-                    return INPUT_ERROR;
-                }
+                xor5(file);
             }
             break;
             case 6: {
-                if (SUCCESS != xor6(file)) {
-                    return INPUT_ERROR;
-                }
+                xor6(file);
             }
             break;
             default: {
@@ -190,6 +216,22 @@ STATUS_CODE do_action(FILE *file, char **action, char **attr) {
             return INPUT_ERROR;
         }
     } else if (strncmp(*action, "find", 4) == 0) {
+        pid = fork();
+        switch (pid) {
+            case 0: {
+                if (SUCCESS != find(file, attr)) {
+                    printf("%s не нашлось в %s :(", *attr, *filename);
+                    return SUCCESS;
+                }
+                printf("%s был найден в %s\n", *attr, *filename);
+                return SUCCESS;
+            }
+            case -1:
+                return FORK_ERROR;
+            default: {
+                wait(&status); // ждемс чилда, пока он там все поищет
+            }
+        }
     } else {
         return INPUT_ERROR;
     }
@@ -206,16 +248,20 @@ int main(const int argc, char *argv[]) {
         return INPUT_ERROR;
     }
 
-    char *action = NULL;
-    char *attr = NULL;
+    const char *action = NULL;
+    const char *attr = NULL;
 
-    action = (strcmp(argv[argc - 1], "mask") == 0 ||
-              strcmp(argv[argc - 1], "find") == 0)
+    action = (strcmp(argv[argc - 2], "mask") == 0 ||
+              strcmp(argv[argc - 2], "find") == 0)
                  ? argv[argc - 2]
                  : argv[argc - 1];
     attr = argv[argc - 1];
+    const int size = (strcmp(argv[argc - 2], "mask") == 0 ||
+                      strcmp(argv[argc - 2], "find") == 0)
+                         ? argc - 2
+                         : argc - 1;
 
-    for (int i = 1; i < argc - 1; i++) {
+    for (int i = 1; i < size; i++) {
         if (argv[i] == NULL) {
             return INPUT_ERROR;
         }
@@ -224,7 +270,7 @@ int main(const int argc, char *argv[]) {
             printf("Ошибка открытия файла");
             return INPUT_ERROR;
         }
-        do_action(file, &action, &attr);
+        do_action(file, &action, &attr, &argv[i]);
         fclose(file);
     }
 
