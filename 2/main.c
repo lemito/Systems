@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <limits.h>
 #include <math.h>
 #include <pthread.h>
@@ -11,6 +12,19 @@
 
 #define pow2(n) (1 << (n))
 typedef char byte;
+
+STATUS_CODE check_hex(const char *hex) {
+    if (hex == NULL) {
+        return INPUT_ERROR;
+    }
+    while (*hex) {
+        if (!isxdigit(*hex)) {
+            return ERROR_OPEN;
+        }
+        hex++;
+    }
+    return SUCCESS;
+}
 
 STATUS_CODE str_to_uint(const char *str, unsigned int *out, const int base) {
     if (str == NULL || *str == '\0' || out == NULL || base < 2 || base > 36) {
@@ -69,6 +83,7 @@ STATUS_CODE xor4(FILE *file) {
     }
     byte res[2] = {0x00, 0x00};
     byte one[2] = {0x00, 0x00};
+    // группируем группу байт согласно размеру, в случае чего дозаполняем нулями
     size_t st = 0;
     while ((st = fread(&one, sizeof(one), 1, file)) != 0) {
         if (st != sizeof(one)) {
@@ -253,6 +268,38 @@ STATUS_CODE copy(FILE **file, const int i, const char **const filename) {
     return SUCCESS;
 }
 
+char *get_absolute_path(const char *path, char buf[FILENAME_MAX]) {
+    char *tmp = realpath(path, buf);
+    if (tmp == NULL) {
+        printf("Ошибка получения абсолютного пути\n");
+        return NULL;
+    }
+    return tmp;
+}
+
+/**
+ * 100111 == 27(16) маска
+ * 100111 == 47 - число
+ * 111111 == 63 - число
+ * @param mask
+ * @param res
+ * @param file
+ * @return
+ */
+STATUS_CODE cnt_by_mask(const unsigned int *mask, size_t *res, FILE *file) {
+    if (mask == NULL || res == NULL || file == NULL) {
+        return INPUT_ERROR;
+    }
+    unsigned int obj = 0;
+    while (fread(&obj, sizeof(unsigned int), 1, file) != 0) {
+        if ((obj & *mask) != 0) {
+            (*res)++;
+        }
+    }
+    fseek(file, 0, SEEK_SET);
+    return SUCCESS;
+}
+
 STATUS_CODE do_action(FILE **file, const char **const action, const char **const attr, const char **const filename) {
     if (action == NULL || *action == NULL || attr == NULL || *attr == NULL ||
         file == NULL) {
@@ -315,18 +362,30 @@ STATUS_CODE do_action(FILE **file, const char **const action, const char **const
         }
     } else if (strncmp(*action, "mask", 4) == 0) {
         unsigned int mask = 0;
+        if (ERROR_OPEN == check_hex(*attr)) {
+            return INPUT_ERROR;
+        }
         if (SUCCESS != str_to_uint(*attr, &mask, 16)) {
             return INPUT_ERROR;
         }
+        size_t res = 0;
+        if (INPUT_ERROR == cnt_by_mask(&mask, &res, *file)) {
+            return INPUT_ERROR;
+        }
+        printf("Четырехбайтовых чисел, удовлетворяющих маске %s найдено %ld\n", *attr, res);
     } else if (strncmp(*action, "find", 4) == 0) {
         pid = fork();
         switch (pid) {
             case 0: {
+                char BUF[FILENAME_MAX];
+                if (NULL == get_absolute_path(*filename, BUF)) {
+                    return MEMORY_ERROR;
+                }
                 if (SUCCESS != find(*file, attr)) {
-                    printf("%s не нашлось в %s :(", *attr, *filename);
+                    printf("%s не нашлось в %s :(", *attr, BUF);
                     return SUCCESS;
                 }
-                printf("%s был найден в %s\n", *attr, *filename);
+                printf("%s был найден в %s\n", *attr, BUF);
                 return SUCCESS;
             }
             case -1:

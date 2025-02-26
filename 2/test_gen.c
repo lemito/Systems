@@ -6,7 +6,7 @@
 //
 
 #define SEED 27022005
-#define N 10000
+#define N 100
 #define MASK_NUM 0x27
 
 int main(void) {
@@ -16,8 +16,9 @@ int main(void) {
     }
     size_t cnt = 0;
     for (unsigned int i = 0; i < N; i++) {
-        if (i & MASK_NUM) {
+        if ((i & MASK_NUM) > 0) {
             fwrite(&i, sizeof(unsigned int), 1, fp);
+            printf("%d\n", i);
             cnt++;
         }
     }
