@@ -130,7 +130,7 @@ STATUS_CODE xor6(FILE *file) {
         }
     }
 
-    printf("xor5:\n");
+    printf("xor6:\n");
     for (size_t i = 0; i < sizeof(one); i++) {
         printf("%x ", res[i]);
     }
@@ -179,8 +179,8 @@ STATUS_CODE to_string(size_t src, char **res) {
         return SUCCESS;
     }
     size_t len = (size_t) (log(src) / log(10)) + 1;
-    (*res) = (char *) malloc((len + 1) * sizeof(char));
-    if ((*res) == NULL) {
+    *res = (char *) malloc((len + 1) * sizeof(char));
+    if (*res == NULL) {
         return MEMORY_ERROR;
     }
 
@@ -353,16 +353,17 @@ int main(const int argc, char *argv[]) {
 
     const char *action = NULL;
     const char *attr = NULL;
+    int size = 0;
 
     action = (strcmp(argv[argc - 2], "mask") == 0 ||
               strcmp(argv[argc - 2], "find") == 0)
                  ? argv[argc - 2]
                  : argv[argc - 1];
     attr = argv[argc - 1];
-    const int size = (strcmp(argv[argc - 2], "mask") == 0 ||
-                      strcmp(argv[argc - 2], "find") == 0)
-                         ? argc - 2
-                         : argc - 1;
+    size = (strcmp(argv[argc - 2], "mask") == 0 ||
+            strcmp(argv[argc - 2], "find") == 0)
+               ? argc - 2
+               : argc - 1;
 
     for (int i = 1; i < size; i++) {
         if (argv[i] == NULL) {
