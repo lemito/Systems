@@ -174,7 +174,7 @@ STATUS_CODE xor6(FILE *file) {
     for (size_t i = 0; i < sizeof(one); i++) {
         printf("%x ",  res.bytes[i]);
     }
-    printf("\nNum %d(10) %x(hex)", res.num, res.num);
+    printf("\nNum %ld(10) %llx(hex)", res.num, res.num);
     return SUCCESS;
 }
 
