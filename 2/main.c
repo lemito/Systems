@@ -2,6 +2,7 @@
 #include <limits.h>
 #include <math.h>
 #include <pthread.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -81,24 +82,35 @@ STATUS_CODE xor4(FILE *file) {
     if (file == NULL) {
         return INPUT_ERROR;
     }
-    byte res[2] = {0x00, 0x00};
+    // byte res[2] = {0x00, 0x00};
+    union res_t {
+        byte bytes[2];
+        uint16_t num;
+    };
+    union res_t res;
+    res.num = 0;
     byte one[2] = {0x00, 0x00};
     // группируем группу байт согласно размеру, в случае чего дозаполняем нулями
     size_t st = 0;
     while ((st = fread(&one, sizeof(one), 1, file)) != 0) {
-        if (st != sizeof(one)) {
+        if (st < sizeof(one)) {
             for (size_t i = st; i < sizeof(one); i++) {
-                res[i] = 0x00;
+                one[i] = 0x00;
             }
         }
         for (size_t i = 0; i < sizeof(one); i++) {
-            res[i] ^= one[i];
+            res.bytes[i] ^= one[i];
+        }
+
+        for (size_t i = 0; i < sizeof(one); i++) {
+            one[i] = 0x00;
         }
     }
     printf("xor4:\n");
     for (size_t i = 0; i < sizeof(one); i++) {
-        printf("%x ", res[i]);
+        printf("%x ", res.bytes[i]);
     }
+    printf("\nNum %d(10) %x(hex)", res.num, res.num);
     return SUCCESS;
 }
 
@@ -106,24 +118,31 @@ STATUS_CODE xor5(FILE *file) {
     if (file == NULL) {
         return INPUT_ERROR;
     }
-    byte res[4] = {0x00, 0x00, 0x00, 0x00};
+    // byte res[4] = {0x00, 0x00, 0x00, 0x00};
+    union res_t {
+        byte bytes[4];
+        uint32_t num;
+    };
+    union res_t res;
+    res.num = 0;
     byte one[4] = {0x00, 0x00, 0x00, 0x00};
     size_t st = 0;
     while ((st = fread(&one, sizeof(one), 1, file))) {
-        if (st != 4) {
+        if (st < sizeof(one)) {
             for (size_t i = st; i < 4; i++) {
                 one[i] = 0x00;
             }
         }
         for (size_t i = 0; i < 4; i++) {
-            res[i] ^= one[i];
+            res.bytes[i] ^= one[i];
         }
     }
 
     printf("xor5:\n");
     for (size_t i = 0; i < sizeof(one); i++) {
-        printf("%x ", res[i]);
+        printf("%x ", res.bytes[i]);
     }
+    printf("\nNum %d(10) %x(hex)", res.num, res.num);
     return SUCCESS;
 }
 
@@ -131,24 +150,31 @@ STATUS_CODE xor6(FILE *file) {
     if (file == NULL) {
         return INPUT_ERROR;
     }
-    byte res[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    // byte res[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    union res_t {
+        byte bytes[8];
+        uint64_t num;
+    };
+    union res_t res;
+    res.num = 0;
     byte one[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     size_t st = 0;
     while ((st = fread(&one, sizeof(one), 1, file))) {
-        if (st != 4) {
+        if (st < sizeof(one)) {
             for (size_t i = st; i < sizeof(one); i++) {
                 one[i] = 0x00;
             }
         }
         for (size_t i = 0; i < 4; i++) {
-            res[i] ^= one[i];
+            res.bytes[i] ^= one[i];
         }
     }
 
     printf("xor6:\n");
     for (size_t i = 0; i < sizeof(one); i++) {
-        printf("%x ", res[i]);
+        printf("%x ",  res.bytes[i]);
     }
+    printf("\nNum %d(10) %x(hex)", res.num, res.num);
     return SUCCESS;
 }
 
