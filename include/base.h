@@ -19,6 +19,13 @@ enum STATUS_CODE {
 
 typedef enum STATUS_CODE STATUS_CODE;
 
+union semun {
+    int val;                  /* значение для SETVAL */
+    struct semid_ds *buf;     /* буфер для IPC_STAT, IPC_SET */
+    unsigned short *array;    /* массив для GETALL, SETALL */
+    struct seminfo *__buf;    /* буфер для IPC_INFO (Linux-specific) */
+};
+
 #define CLEAR_BUF() while (getchar() != '\n'){}
 
 #endif //BASE_H

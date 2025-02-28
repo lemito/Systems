@@ -162,7 +162,10 @@ int main(void) {
   }
 
   for (int philo_id = 0; philo_id < PHILOSOPHER_CNT; philo_id++) {
-    semctl(semid, philo_id, SETVAL, 1);
+    union semun arg;
+    arg.val = 1;
+    semctl(semid, philo_id, SETVAL, arg);
+    // semctl(semid, philo_id, SETVAL, 1);
   }
 
   for (int philo_id = 0; philo_id < PHILOSOPHER_CNT; philo_id++) {
