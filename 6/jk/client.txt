@@ -1,0 +1,149 @@
+// #include <stdio.h>
+// #include <stdlib.h>
+// #include <string.h>
+// #include <sys/mman.h>
+// #include <sys/sem.h>
+// #include <sys/shm.h>
+// #include <unistd.h>
+//
+// #include "shared.h"
+//
+// typedef struct data {
+//     void *mem;
+//     size_t str_cnt;
+// } data_t;
+//
+// int main(const int argc, char **argv) {
+//     if (argc < 2) {
+//         printf("Используй %s <abs path0> <abs path1> <abs path2> <abs path3> ...\n",
+//                argv[0]);
+//         return INPUT_ERROR;
+//     }
+//     key_t skey, semkey, infokey, reskey;
+//     int shm;
+//     int sem;
+//     int size_id;
+//     void *meow = NULL;
+//     char *ptr = NULL;
+//     size_t *sizee = NULL;
+//     size_t offset = 0;
+//     size_t to_sharing = sizeof(size_t);
+//
+//     for (size_t i = 1; i < argc; i++) {
+//         if (argv[i] == NULL) {
+//             return INPUT_ERROR;
+//         }
+//         to_sharing += (strlen(argv[i]) + 1) * sizeof(char);
+//     }
+//
+//     if ((infokey = ftok(INFO_NAME, 'S')) == -1) {
+//         perror("ftok sizekey\n");
+//     }
+//     size_id = shmget(infokey, sizeof(size_t), 0666);
+//     if (size_id == -1) {
+//         // semctl(size_id, 0, IPC_RMID);
+//         perror("shmget sizeid");
+//         return MEMORY_ERROR;
+//     }
+//
+//     sizee = shmat(size_id, NULL, 0);
+//     if (sizee == (void *) -1) {
+//         perror("shmat sizeid");
+//         return MEMORY_ERROR;
+//     }
+//
+//     *sizee = to_sharing;
+//     printf("%ld\n", *sizee);
+//
+//     if ((skey = ftok(SHM_NAME, 'S')) == -1) {
+//         perror("ftok shm\n");
+//         return INPUT_ERROR;
+//     }
+//     if ((semkey = ftok(SEM_NAME, 'W')) == -1) {
+//         perror("ftok sem\n");
+//         return INPUT_ERROR;
+//     }
+//     if ((reskey = ftok(SHM_RESULT_NAME, 'r')) == -1) {
+//         perror("ftok sem\n");
+//     }
+//
+//     if ((sem = semget(semkey, 6, 0666)) == -1) {
+//         perror("semget\n");
+//         return SEM_ERR;
+//     }
+//
+//     if (SEM_POST(sem, SIZE_SERVER_ix) != SUCCESS) {
+//         fprintf(stderr, "Ошибка SEM_POST SIZE_SERVER_ix\n");
+//         return SEM_ERR;
+//     }
+//
+//     if (SEM_WAIT(sem, SIZE_CLIENT_ix) != SUCCESS) {
+//         fprintf(stderr, "Ошибка SEM_WAIT SIZE_CLIENT_ix\n");
+//         return SEM_ERR;
+//     }
+//
+//     shm = shmget(skey, to_sharing, 0666); // IPC_CREAT | IPC_EXCL |
+//     if (shm == -1) {
+//         perror("shmget data");
+//         exit(MEMORY_ERROR);
+//     }
+//     meow = shmat(shm, NULL, 0);
+//     if (meow == (void *) -1) {
+//         perror("shmat data");
+//         exit(MEMORY_ERROR);
+//     }
+//     CLEAR(meow, to_sharing);
+//
+//     *(size_t *) meow = argc - 1;
+//     ptr = (char *) meow + 1;
+//
+//     for (size_t i = 1; i < argc; i++) {
+//         printf("%s отправлено\n", argv[i]);
+//         strcpy(ptr + offset, argv[i]);
+//         offset += strlen(argv[i]) + 1;
+//     }
+//
+//     if (SEM_POST(sem, SERVER_ix) != SUCCESS) {
+//         fprintf(stderr, "Ошибка SEM_POST SERVER_ix\n");
+//     }
+//     // printf("Вы свободны!\n");
+//     if (SEM_WAIT(sem, CLIENT_IX) != SUCCESS) {
+//         fprintf(stderr, "Ошибка SEM_WAIT CLIENT_IX\n");
+//     }
+//
+//     const int shm_res_id = shmget(reskey, 1, 0666);
+//     if (shm_res_id == -1) {
+//         semctl(shm_res_id, 0, IPC_RMID);
+//         perror("shm_res_id\n");
+//         return MEMORY_ERROR;
+//     }
+//
+//     char *res_ptr = shmat(shm_res_id, NULL, 0);
+//     if (res_ptr == (char *) -1) {
+//         perror("res_ptr\n");
+//         return MEMORY_ERROR;
+//     }
+//
+//     const size_t res_size = *(size_t *) res_ptr;
+//     char *res = (char *) res_ptr + sizeof(size_t);
+//
+//     printf("res_size = %ld\n%s", res_size, res);
+//
+//     if (SEM_POST(sem, CLIENT_RES_IX) != SUCCESS) {
+//         fprintf(stderr, "Ошибка SEM_POST CLIENT_RES_IX\n");
+//         return SEM_ERR;
+//     }
+//
+//
+//     if (shmdt(meow) == -1) {
+//         printf("shmdt");
+//     }
+//     if (shmdt(res_ptr) == -1) {
+//         printf("shmdt");
+//     }
+//     if (shmdt(sizee) == -1) {
+//         printf("shmdt");
+//     }
+//
+//     return 0;
+// }

@@ -20,6 +20,10 @@
 
 #define CLIENT_IX 0
 #define SERVER_ix 1
+#define SIZE_SERVER_ix 2
+#define SIZE_CLIENT_ix 3
+#define SERVER_RES_IX 4
+#define CLIENT_RES_IX 5
 
 #define CLEAR(ptr, n) memset(ptr, 0, n)
 
@@ -43,7 +47,9 @@ STATUS_CODE sem_op(const int semid, const int sem_ix, const short op) {
   return SUCCESS;
 }
 
+// semix ждет
 #define SEM_WAIT(semid, semix) sem_op((semid), (semix), -1)
+// говорим semix, что мы готовы
 #define SEM_POST(semid, semix) sem_op((semid), (semix), 1)
 
 #define INIT(semid)
