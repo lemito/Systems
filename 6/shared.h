@@ -8,8 +8,6 @@
 #include <sys/sem.h>
 #define MAXSETSIZE 2
 
-#include <sys/types.h>
-
 #include "../include/base.h"
 
 #define SHM_NAME "/tmp/my_beutiful_shm"
@@ -20,11 +18,6 @@
 #define SERVER_ix 1
 
 #define CLEAR(ptr, n) memset(ptr, 0, n)
-
-typedef struct info {
-    int shm_id;
-    size_t data_size;
-} info_t;
 
 /**
  * удобная штучка для управление семафорчиком

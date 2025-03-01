@@ -21,7 +21,7 @@ int main(void) {
   int sem;
   int size_id;
   void *meow;
-  info_t *info = NULL;
+  size_t *info = NULL;
 
   if ((sizekey = ftok(INFO_NAME, 'S')) == -1) {
     perror("ftok sizekey\n");
@@ -32,7 +32,7 @@ int main(void) {
   if ((semkey = ftok(SEM_NAME, 'b')) == -1) {
     perror("ftok sem\n");
   }
-  size_id = shmget(sizekey, sizeof(info_t), 0666);
+  size_id = shmget(sizekey, sizeof(size_t), IPC_CREAT | 0666);
   if (size_id != -1) {
     semctl(size_id, 0, IPC_RMID);
     return MEMORY_ERROR;
@@ -73,6 +73,14 @@ int main(void) {
     return SEM_ERR;
   }
 
+  if ((shm = shmget(skey, MAX_SIZE, IPC_CREAT | 0666)) == -1) {
+    perror("shmget data\n");
+    return MEMORY_ERROR;
+  }
+
+  if ((meow = shmat(shm, NULL, 0)) == (void *)-1) printf("shmat");
+  CLEAR(meow, MAX_SIZE);
+
   printf("Сервер запустился!!!\n");
 
   while (1) {
@@ -83,22 +91,11 @@ int main(void) {
     }
 
     info = shmat(size_id, NULL, 0);
-    if (info == (size_t)-1) {
+    if (info == (size_t*)-1) {
       perror("shmget info\n");
       return MEMORY_ERROR;
     }
 
-    if ((shm = shmget(skey, info->data_size, IPC_CREAT | 0666)) == -1) {
-      perror("shmget data\n");
-      return MEMORY_ERROR;
-    }
-
-    info->shm_id = shm;
-    SEM_POST(sem, SERVER_ix);
-    SEM_WAIT(sem, CLIENT_IX);
-
-    if ((meow = shmat(shm, NULL, 0)) == (void *)-1) printf("shmat");
-    CLEAR(meow, MAX_SIZE);
 
     size_t off = 0;
 
@@ -118,7 +115,7 @@ int main(void) {
       }
     }
 
-    CLEAR(meow, info->data_size);
+    CLEAR(meow, MAX_SIZE);
 
     if (SEM_POST(sem, CLIENT_IX) != SUCCESS) {
       fprintf(stderr, "Ошибка SEM_POST CLIENT_IX\n");

@@ -34,23 +34,23 @@ int main(const int argc, char **argv) {
     }
     to_sharing += (strlen(argv[i]) + 1) * sizeof(char);
   }
-  if ((infokey = ftok(INFO_NAME, 'S')) == -1) {
-    perror("ftok sizekey\n");
-  }
-  size_id = shmget(infokey, sizeof(info_t), 0666);
-  if (size_id == -1) {
-    // semctl(size_id, 0, IPC_RMID);
-    perror("shmget sizeid");
-    return MEMORY_ERROR;
-  }
-
-  info_t *sizee = shmat(size_id, NULL, 0);
-  if (sizee == -1) {
-    perror("shmat sizeid");
-    return MEMORY_ERROR;
-  }
-
-  sizee->data_size = to_sharing;
+  // if ((infokey = ftok(INFO_NAME, 'S')) == -1) {
+  //   perror("ftok sizekey\n");
+  // }
+  // size_id = shmget(infokey, sizeof(info_t), 0666);
+  // if (size_id == -1) {
+  //   // semctl(size_id, 0, IPC_RMID);
+  //   perror("shmget sizeid");
+  //   return MEMORY_ERROR;
+  // }
+  //
+  // info_t *sizee = shmat(size_id, NULL, 0);
+  // if (sizee == -1) {
+  //   perror("shmat sizeid");
+  //   return MEMORY_ERROR;
+  // }
+  //
+  // sizee->data_size = to_sharing;
 
   if ((skey = ftok(SHM_NAME, 'S')) == -1) {
     perror("ftok shm\n");
@@ -60,21 +60,21 @@ int main(const int argc, char **argv) {
     perror("ftok sem\n");
     return INPUT_ERROR;
   }
-  //   if ((shm = shmget(skey, to_sharing, 0666)) == -1) {
-  //     perror("shmget\n");
-  //     return MEMORY_ERROR;
-  //   }
-  sizee->shm_id = shmget(IPC_PRIVATE, to_sharing, IPC_CREAT | 0666);
-  if (sizee->shm_id == -1) {
-    perror("shmget data");
+  if ((shm = shmget(skey, to_sharing, 0666)) == -1) {
+    perror("shmget\n");
     return MEMORY_ERROR;
   }
+  // sizee->shm_id = shmget(IPC_PRIVATE, to_sharing, IPC_CREAT | 0666);
+  // if (sizee->shm_id == -1) {
+  //   perror("shmget data");
+  //   return MEMORY_ERROR;
+  // }
   if ((sem = semget(semkey, 2, 0666)) == -1) {
     perror("semget\n");
     return SEM_ERR;
   }
 
-  if ((meow = shmat(sizee->shm_id, NULL, 0)) == (void *)-1) {
+  if ((meow = shmat(shm, NULL, 0)) == (void *)-1) {
     printf("shmat");
     return MEMORY_ERROR;
   }
