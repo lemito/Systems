@@ -25,6 +25,7 @@ int main(const int argc, char **argv) {
   int size_id;
   void *meow = NULL;
   char *ptr = NULL;
+  size_t* sizee = NULL;
   size_t offset = 0;
   size_t to_sharing = sizeof(size_t);
 
@@ -34,23 +35,25 @@ int main(const int argc, char **argv) {
     }
     to_sharing += (strlen(argv[i]) + 1) * sizeof(char);
   }
-  // if ((infokey = ftok(INFO_NAME, 'S')) == -1) {
-  //   perror("ftok sizekey\n");
-  // }
-  // size_id = shmget(infokey, sizeof(info_t), 0666);
-  // if (size_id == -1) {
-  //   // semctl(size_id, 0, IPC_RMID);
-  //   perror("shmget sizeid");
-  //   return MEMORY_ERROR;
-  // }
-  //
-  // info_t *sizee = shmat(size_id, NULL, 0);
-  // if (sizee == -1) {
-  //   perror("shmat sizeid");
-  //   return MEMORY_ERROR;
-  // }
-  //
-  // sizee->data_size = to_sharing;
+
+  if ((infokey = ftok(INFO_NAME, 'S')) == -1) {
+    perror("ftok sizekey\n");
+  }
+  size_id = shmget(infokey, sizeof(size_t), 0666);
+  if (size_id == -1) {
+    // semctl(size_id, 0, IPC_RMID);
+    perror("shmget sizeid");
+    return MEMORY_ERROR;
+  }
+
+  sizee = shmat(size_id, NULL, 0);
+  if (sizee == (void*)-1) {
+    perror("shmat sizeid");
+    return MEMORY_ERROR;
+  }
+
+  *sizee = to_sharing;
+  printf("%ld\n", *sizee);
 
   if ((skey = ftok(SHM_NAME, 'S')) == -1) {
     perror("ftok shm\n");
