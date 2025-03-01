@@ -11,7 +11,7 @@
 
 #define MAX_SIZE (4096 * 10)
 
-STATUS_CODE dir_view(const char *path, char* res, size_t* res_size) {
+STATUS_CODE dir_view(const char *path, char **res, size_t *res_size) {
     if (path == NULL) {
         return INPUT_ERROR;
     }
@@ -44,12 +44,11 @@ STATUS_CODE dir_view(const char *path, char* res, size_t* res_size) {
     off += sprintf(off + BUF, "Сейчас смотрим: %s\n", result);
 
     while ((dentry = readdir(dirp)) != NULL) {
-
         char name[PATH_MAX];
         snprintf(name, sizeof(name) / sizeof(char), "%s/%s", result, dentry->d_name);
         const size_t len = strlen(name) + 30 + 7 + 7 + off;
         if (len >= cap) {
-            char *tmp = (char*)realloc(BUF, cap + (2 * len));
+            char *tmp = (char *) realloc(BUF, cap + (2 * len));
             if (tmp == NULL) {
                 free(BUF);
                 return MEMORY_ERROR;
@@ -97,8 +96,7 @@ STATUS_CODE dir_view(const char *path, char* res, size_t* res_size) {
             break;
         }
     }
-    // printf("%s\n", BUF);
-    strcpy(res, BUF);
+    strcpy(*res, BUF);
     *res_size = strlen(BUF);
     closedir(dirp);
     free(BUF);
@@ -200,24 +198,30 @@ int main(void) {
         }
         // CLEAR(meow, *info);
 
-        size_t off = 0;
-
         const size_t *sPtr = (size_t *) meow;
         char *mPtr = (char *) meow + sizeof(size_t);
 
         if (*sPtr == 0) {
             printf("Сервер получил сигнал завершения. Выход...\n");
         } else {
+            size_t off = 0;
             printf("Сервер начал обработку\n");
 
             printf("Путей получено = %lu\n", *sPtr);
+            char **pre_buf = malloc(*sPtr * sizeof(char *));
+            if (pre_buf == NULL) {
+                return MEMORY_ERROR;
+            }
             for (size_t i = 0; i < *sPtr; i++) {
                 size_t len = 0;
-                char* BUF = 0;
                 printf("path=%s\n", mPtr + off);
-                dir_view(mPtr + off, BUF, &len);
+                dir_view(mPtr + off, pre_buf + i, &len);
                 off += strlen(mPtr + off) + 1;
             }
+            printf("%s", pre_buf[0]);
+
+
+            free(pre_buf);
         }
 
         CLEAR(meow, MAX_SIZE);
@@ -226,6 +230,11 @@ int main(void) {
             fprintf(stderr, "Ошибка SEM_POST CLIENT_IX\n");
         } else {
             printf("Сервер отработал клиента!\n");
+        }
+
+        if (shmdt(meow) == -1) {
+            perror("shmdt\n");
+            return MEMORY_ERROR;
         }
     }
 

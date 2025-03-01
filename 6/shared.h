@@ -10,10 +10,14 @@
 
 #include "../include/base.h"
 
+// тут живут пути всех вещей
 #define SHM_NAME "/tmp/my_beutiful_shm"
 #define SEM_NAME "/tmp/my_beutiful_sem"
+#define SHM_RESULT_NAME "/tmp/my_beutiful_shm_result"
 #define INFO_NAME "/tmp/info_size"
+
 #define SIZE_SIZE sizeof(size_t)
+
 #define CLIENT_IX 0
 #define SERVER_ix 1
 
