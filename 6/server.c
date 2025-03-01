@@ -11,7 +11,7 @@
 
 #define MAX_SIZE (4096 * 10)
 
-STATUS_CODE dir_view(char *path) {
+STATUS_CODE dir_view(const char *path, char* res, size_t* res_size) {
     if (path == NULL) {
         return INPUT_ERROR;
     }
@@ -25,8 +25,6 @@ STATUS_CODE dir_view(char *path) {
     char result[siz + 1];
     strncpy(result, path, siz);
     result[siz] = '\0';
-
-    printf("Сейчас смотрим: %s\n", result);
 
     DIR *dirp = NULL; // тек. директория
     struct dirent *dentry = NULL; // инфа о ней
@@ -42,14 +40,16 @@ STATUS_CODE dir_view(char *path) {
     if (BUF == NULL) {
         return MEMORY_ERROR;
     }
+    size_t off = 0;
+    off += sprintf(off + BUF, "Сейчас смотрим: %s\n", result);
 
     while ((dentry = readdir(dirp)) != NULL) {
-        size_t off = 0;
+
         char name[PATH_MAX];
-        snprintf(name, sizeof(name) / sizeof(char), "%s/%s", path, dentry->d_name);
+        snprintf(name, sizeof(name) / sizeof(char), "%s/%s", result, dentry->d_name);
         const size_t len = strlen(name) + 30 + 7 + 7 + off;
         if (len >= cap) {
-            char *tmp = realloc(BUF, cap + (2 * len));
+            char *tmp = (char*)realloc(BUF, cap + (2 * len));
             if (tmp == NULL) {
                 free(BUF);
                 return MEMORY_ERROR;
@@ -57,7 +57,7 @@ STATUS_CODE dir_view(char *path) {
             BUF = tmp;
             cap += (2 * len);
         }
-
+        // printf("%s\n", name);
         switch (dentry->d_type) {
             case DT_DIR: {
                 off += sprintf(BUF + off, "директория: %s ino = %lu\n", name, dentry->d_ino);
@@ -97,7 +97,9 @@ STATUS_CODE dir_view(char *path) {
             break;
         }
     }
-    printf("%s\n", BUF);
+    // printf("%s\n", BUF);
+    strcpy(res, BUF);
+    *res_size = strlen(BUF);
     closedir(dirp);
     free(BUF);
     return SUCCESS;
@@ -210,8 +212,10 @@ int main(void) {
 
             printf("Путей получено = %lu\n", *sPtr);
             for (size_t i = 0; i < *sPtr; i++) {
+                size_t len = 0;
+                char* BUF = 0;
                 printf("path=%s\n", mPtr + off);
-                dir_view(mPtr + off);
+                dir_view(mPtr + off, BUF, &len);
                 off += strlen(mPtr + off) + 1;
             }
         }
