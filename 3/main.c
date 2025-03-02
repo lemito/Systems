@@ -48,7 +48,7 @@ STATUS_CODE sem_op(const int semid, const int sem_ix, const short op) {
 
 void *WORKER(void *p) {
   const int semid = ((useful_things *)p)->semid;
-  int philo_id = ((useful_things *)p)->philo_id;
+  const int philo_id = ((useful_things *)p)->philo_id;
   const int N = ((useful_things *)p)->cnt;
 
   int max_cycle = 3;
