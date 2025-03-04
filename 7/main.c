@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <dirent.h>
 #include "../include//base.h"
+#include <linux/limits.h>
 
 STATUS_CODE dir_browse(const char *path) {
 	if (path == NULL) {

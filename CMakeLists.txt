@@ -3,8 +3,7 @@ project(Systems C CXX)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(7
-    7/main.c include/base.h)
+add_executable(7 7/main.c include/base.h)
 add_executable(1 1/main.c include/base.h)
 add_executable(2 2/main.c include/base.h)
 add_executable(test_gen2 2/test_gen.c)
@@ -15,3 +14,5 @@ add_executable(6c 6/client.c include/base.h 6/shared.h)
 add_executable(6s 6/server.c include/base.h 6/shared.h)
 
 add_executable(meow meow.cpp)
+
+add_executable(5 5/main.c include/base.h)
