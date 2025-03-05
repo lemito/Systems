@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "cstdlib": "c",
-        "shared.h": "c"
+        "shared.h": "c",
+        "complex": "c",
+        "format": "c"
     }
 }

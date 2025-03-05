@@ -15,6 +15,7 @@ enum STATUS_CODE {
     USER_IS_CONTAIN,
     SEM_ERR,
     FORK_ERROR,
+    THREAD_ERROR
 };
 
 typedef enum STATUS_CODE STATUS_CODE;
