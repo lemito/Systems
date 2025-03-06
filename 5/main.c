@@ -138,7 +138,7 @@ STATUS_CODE man_leaves(data_t* p) {
 
 void* work(void* p) {
   if (p == NULL) {
-    return (STATUS_CODE*)NULL_PTR;
+    return NULL;
   }
   char cur_gender = (rand() % 2 == 0) ? 'M' : 'W';
   data_t* targ = (data_t*)p;
@@ -233,8 +233,7 @@ int main(int argc, char const* argv[]) {
   }
 
   for (size_t i = 0; i < PEOPLES; i++) {
-    STATUS_CODE tmp_st;
-    st = pthread_join(sim[i], &tmp_st);
+    st = pthread_join(sim[i], NULL);
     if (st == -1) {
       return THREAD_ERROR;
     }
