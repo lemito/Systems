@@ -11,10 +11,10 @@
 #include "../include/base.h"
 
 // тут живут пути всех вещей
-#define SHM_NAME "/tmp/my_beutiful_shm"
-#define SEM_NAME "/tmp/my_beutiful_sem"
-#define SHM_RESULT_NAME "/tmp/my_beutiful_shm_result"
-#define INFO_NAME "/tmp/info_size"
+#define SHM_NAME "/home/lemito/Desktop/my_sems/my_beutiful_shm"
+#define SEM_NAME "/home/lemito/Desktop/my_sems/my_beutiful_sem"
+#define SHM_RESULT_NAME "/home/lemito/Desktop/my_sems/my_beutiful_shm_result"
+#define INFO_NAME "/home/lemito/Desktop/my_sems/info_size"
 
 #define SIZE_SIZE sizeof(size_t)
 

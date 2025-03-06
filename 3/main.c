@@ -9,7 +9,7 @@
 
 #include "../include/base.h"
 
-#define SEM_NAME "/my_super_duper_semaphore"
+#define SEM_NAME "/home/lemito/Desktop/my_sems/my_super_duper_semaphore"
 
 #define LEFT_PORIGE(i, N) (i)  // левая вилка совпадает с номером философа
 #define RIGHT_PORIGE(i, N) \
@@ -150,14 +150,14 @@ int main(void) {
 
   args = (useful_things *)malloc(PHILOSOPHER_CNT * sizeof(useful_things));
   if (args == NULL) {
-    free(philosophers);
+    FREE_AND_NULL(philosophers);
     return MEMORY_ERROR;
   }
 
   if ((semid = semget(sem_key, PHILOSOPHER_CNT, IPC_CREAT | 0666)) == -1) {
     printf("Ошибка создания семафора\n");
-    free(philosophers);
-    free(args);
+    FREE_AND_NULL(philosophers);
+    FREE_AND_NULL(args);
     return SEM_ERR;
   }
 
@@ -181,14 +181,14 @@ int main(void) {
 
   if (-1 == semctl(semid, PHILOSOPHER_CNT, IPC_RMID)) {
     printf("Не удалось удалить семафор\n");
-    free(philosophers);
-    free(args);
+    FREE_AND_NULL(philosophers);
+    FREE_AND_NULL(args);
     return SEM_ERR;
   }
 
   semctl(semid, 0, IPC_RMID);
-  free(philosophers);
-  free(args);
+  FREE_AND_NULL(philosophers);
+  FREE_AND_NULL(args);
 
   return 0;
 }
