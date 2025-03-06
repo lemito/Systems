@@ -127,9 +127,9 @@ STATUS_CODE man_leaves(data_t* p) {
     // сбрасываем все до заводских
     semctl(p->semid, WOMAN, SETVAL, p->N);
 
-  //   for (int i = 0; i < p->N; i++) {
-  //     SEM_POST(p->semid, WOMAN);
-  // }
+    //   for (int i = 0; i < p->N; i++) {
+    //     SEM_POST(p->semid, WOMAN);
+    // }
   }
 
   SEM_POST(p->semid, MUTEX);
@@ -142,20 +142,44 @@ void* work(void* p) {
   }
 
   // TODO: мб сделать чтобы не случайно выбирался пол, а из массива
-  char cur_gender = (rand() % 2 == 0) ? 'M' : 'W';
+  // char cur_gender = (rand() % 2 == 0) ? 'M' : 'W';
   data_t* targ = (data_t*)p;
-  switch (cur_gender) {
-    case 'M': {
-      man_wants_to_enter(targ);
-      sleep(rand() % 3);
-      man_leaves(targ);
-    } break;
-    case 'W': {
-      woman_wants_to_enter(targ);
-      sleep(rand() % 3);
-      woman_leaves(targ);
-    } break;
+  // switch (cur_gender) {
+  //   case 'M': {
+  man_wants_to_enter(targ);
+  sleep(rand() % 3);
+  man_leaves(targ);
+  //   } break;
+  //   case 'W': {
+  //     woman_wants_to_enter(targ);
+  //     sleep(rand() % 3);
+  //     woman_leaves(targ);
+  //   } break;
+  // }
+  // printf("bbb\n");
+  return NULL;
+}
+
+void* work2(void* p) {
+  if (p == NULL) {
+    return NULL;
   }
+  data_t* targ = (data_t*)p;
+  // TODO: мб сделать чтобы не случайно выбирался пол, а из массива
+  // char cur_gender = (rand() % 2 == 0) ? 'M' : 'W';
+  // data_t* targ = (data_t*)p;
+  // switch (cur_gender) {
+  //   case 'M': {
+  //     man_wants_to_enter(targ);
+  //     sleep(rand() % 3);
+  //     man_leaves(targ);
+  //   } break;
+  //   case 'W': {
+  woman_wants_to_enter(targ);
+  sleep(rand() % 3);
+  woman_leaves(targ);
+  //   } break;
+  // }
   // printf("bbb\n");
   return NULL;
 }
@@ -172,19 +196,41 @@ int main(int argc, char const* argv[]) {
   int semid;
   pthread_t* sim;  // потоки симуляции
   data_t targ;     // аргумент потока
+  int man, woman;
 
   srand(time(NULL));
 
-  printf("Введи общее количество человек >> ");
-  st = scanf("%d", &PEOPLES);
+  // printf("Введи общее количество человек >> ");
+  // st = scanf("%d", &PEOPLES);
+  // if (st != 1) {
+  //   printf("Невалидное число - ожидалось int");
+  //   return INPUT_ERROR;
+  // }
+  // if (PEOPLES <= 0) {
+  //   printf("Должно быть людей >0\n");
+  //   return INPUT_ERROR;
+  // }
+  printf("Введи общее количество мужчин >> ");
+  st = scanf("%d", &man);
   if (st != 1) {
     printf("Невалидное число - ожидалось int");
     return INPUT_ERROR;
   }
-  if (PEOPLES <= 0) {
+  if (man <= 0) {
     printf("Должно быть людей >0\n");
     return INPUT_ERROR;
   }
+  printf("Введи общее количество женщин >> ");
+  st = scanf("%d", &woman);
+  if (st != 1) {
+    printf("Невалидное число - ожидалось int");
+    return INPUT_ERROR;
+  }
+  if (woman <= 0) {
+    printf("Должно быть людей >0\n");
+    return INPUT_ERROR;
+  }
+
   printf("Введи MAX количество кабинок в ванне >> ");
   st = scanf("%d", &N);
   if (st != 1) {
@@ -216,6 +262,8 @@ int main(int argc, char const* argv[]) {
     semctl(semid, i, SETVAL, arg);
   }
 
+  PEOPLES = man + woman;
+
   sim = (pthread_t*)malloc(sizeof(pthread_t) * PEOPLES);
   if (sim == NULL) {
     semctl(semid, 0, IPC_RMID, 0);
@@ -227,8 +275,21 @@ int main(int argc, char const* argv[]) {
   targ.state = 'F';
   targ.cur_cnt = 0;
 
-  for (size_t i = 0; i < PEOPLES; i++) {
+  /*
+  3-m 5-woman
+  mmmwwwww
+  01234567
+
+  */
+
+  for (size_t i = 0; i < man; i++) {
     st = pthread_create(sim + i, NULL, work, &targ);
+    if (st == -1) {
+      return THREAD_ERROR;
+    }
+  }
+  for (size_t i = man; i < PEOPLES; i++) {
+    st = pthread_create(sim + i, NULL, work2, &targ);
     if (st == -1) {
       return THREAD_ERROR;
     }
@@ -239,7 +300,6 @@ int main(int argc, char const* argv[]) {
     if (st == -1) {
       return THREAD_ERROR;
     }
-    // printf("%d\n", i);
   }
 
   FREE_AND_NULL(sim);
