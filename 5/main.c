@@ -140,6 +140,8 @@ void* work(void* p) {
   if (p == NULL) {
     return NULL;
   }
+
+  // TODO: мб сделать чтобы не случайно выбирался пол, а из массива
   char cur_gender = (rand() % 2 == 0) ? 'M' : 'W';
   data_t* targ = (data_t*)p;
   switch (cur_gender) {
