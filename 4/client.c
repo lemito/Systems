@@ -13,15 +13,19 @@ STATUS_CODE read_cmd(FILE *fin, char **res) {
   char c;
   size_t buf_cap = 15;
   size_t buf_size = 0;
-  char *buf = (char *) malloc(buf_cap);
+  char *buf = (char *)malloc(buf_cap);
   if (buf == NULL) {
     return MEMORY_ERROR;
   }
 
-  if ((c = fgetc(fin)) == EOF) return SUCCESS;
+  if ((c = fgetc(fin)) == EOF) {
+    FREE_AND_NULL(buf);
+    return SUCCESS;
+  }
   ungetc(c, fin);
 
-  while (!isalpha((c = fgetc(fin)))) {}
+  while (!isalpha((c = fgetc(fin)))) {
+  }
   ungetc(c, fin);
 
   while ((c = fgetc(fin)) != EOF) {
@@ -33,14 +37,14 @@ STATUS_CODE read_cmd(FILE *fin, char **res) {
     }
     if (buf_size >= buf_cap) {
       buf_cap *= 2;
-      char *tmp = (char *) realloc(buf, buf_cap);
+      char *tmp = (char *)realloc(buf, buf_cap);
       if (tmp == NULL) {
         FREE_AND_NULL(buf);
         return MEMORY_ERROR;
       }
       buf = tmp;
     }
-    buf[buf_size++] = (char) tolower(c);
+    buf[buf_size++] = (char)tolower(c);
   }
   buf[buf_size] = '\0';
 
@@ -50,7 +54,9 @@ STATUS_CODE read_cmd(FILE *fin, char **res) {
 }
 
 STATUS_CODE cmd_check(char *cpy) {
-  if (cpy == NULL) { return NULL_PTR; }
+  if (cpy == NULL) {
+    return NULL_PTR;
+  }
 
   const char *cmd = strtok(cpy, " ");
   const char *arg = strtok(NULL, " ");
@@ -61,8 +67,7 @@ STATUS_CODE cmd_check(char *cpy) {
     return INPUT_ERROR;
   }
 
-  if (strcmp(cmd, "take") != 0 &&
-      strcmp(cmd, "put") != 0 &&
+  if (strcmp(cmd, "take") != 0 && strcmp(cmd, "put") != 0 &&
       strcmp(cmd, "move") != 0) {
     printf("%s\n", cpy);
     return INPUT_ERROR;
@@ -73,9 +78,9 @@ STATUS_CODE cmd_check(char *cpy) {
     return INPUT_ERROR;
   }
 
-  if (strcmp(cmd, "take") == 0 && (arg == NULL || (
-                                     strcmp(arg, "goat") != 0 && strcmp(arg, "wolf") != 0 && strcmp(arg, "cabbage") !=
-                                     0))) {
+  if (strcmp(cmd, "take") == 0 &&
+      (arg == NULL || (strcmp(arg, "goat") != 0 && strcmp(arg, "wolf") != 0 &&
+                       strcmp(arg, "cabbage") != 0))) {
     printf("4%s\n", cpy);
     return INPUT_ERROR;
   }
@@ -178,20 +183,18 @@ int main(const int argc, char *argv[]) {
     //   return INPUT_ERROR;
     // }
     // FREE_AND_NULL(cpy);
-
   }
-    // чтение с сервера
-    // if (msgrcv(server_qid, &server_msg, sizeof(server_msg.data), 0, 0) == -1) {
-    //   perror("server_qid msgrcv");
-    //   FREE_AND_NULL(line);
-    //   FCLOSE(file);
-    //   // FREE_AND_NULL(cpy);
-    //   return INPUT_ERROR;
-    // }
+  // чтение с сервера
+  // if (msgrcv(server_qid, &server_msg, sizeof(server_msg.data), 0, 0) == -1) {
+  //   perror("server_qid msgrcv");
+  //   FREE_AND_NULL(line);
+  //   FCLOSE(file);
+  //   // FREE_AND_NULL(cpy);
+  //   return INPUT_ERROR;
+  // }
 
-    FREE_AND_NULL(line);
-    // FREE_AND_NULL(cpy);
-
+  FREE_AND_NULL(line);
+  // FREE_AND_NULL(cpy);
 
   FCLOSE(file);
 
