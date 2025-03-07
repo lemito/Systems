@@ -18,6 +18,12 @@ STATUS_CODE read_cmd(FILE *fin, char **res) {
     return MEMORY_ERROR;
   }
 
+  if ((c = fgetc(fin)) == EOF) return SUCCESS;
+  ungetc(c, fin);
+
+  while (!isalpha((c = fgetc(fin)))) {}
+  ungetc(c, fin);
+
   while ((c = fgetc(fin)) != EOF) {
     if (c == ';') {
       break;
@@ -140,6 +146,7 @@ int main(const int argc, char *argv[]) {
     if (line[slen - 1] == '\n') line[slen - 1] = '\0';
     // while (line = myfgets(file)){
 
+    // puts(line);
 
     /// client_msg.data.buf - команда
 
@@ -159,18 +166,18 @@ int main(const int argc, char *argv[]) {
       return st;
     }
 
-    // подготовк к выводу
-    strcpy(client_msg.data.buf, line);
-
-    // вывод
-    if (msgsnd(server_qid, &client_msg, sizeof(client_msg.data), 0) == -1) {
-      perror("client_qid msgsnd\n");
-      FREE_AND_NULL(line);
-      FCLOSE(file);
-      FREE_AND_NULL(cpy);
-      return INPUT_ERROR;
-    }
-    FREE_AND_NULL(cpy);
+    // // подготовк к выводу
+    // strcpy(client_msg.data.buf, line);
+    //
+    // // вывод
+    // if (msgsnd(server_qid, &client_msg, sizeof(client_msg.data), 0) == -1) {
+    //   perror("client_qid msgsnd\n");
+    //   FREE_AND_NULL(line);
+    //   FCLOSE(file);
+    //   FREE_AND_NULL(cpy);
+    //   return INPUT_ERROR;
+    // }
+    // FREE_AND_NULL(cpy);
 
   }
     // чтение с сервера
