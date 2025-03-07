@@ -372,12 +372,14 @@ STATUS_CODE do_action(FILE **file, const char **const action,
       case 0: {
         if (SUCCESS != copy(file, N, filename)) {
           printf("mew");
-          return ERROR_OPEN;
+          // return ERROR_OPEN;
+          exit(ERROR_OPEN);
         }
-        return SUCCESS;
+        // return SUCCESS;
+        exit(SUCCESS);
       }
       case -1:
-        return FORK_ERROR;
+        // return FORK_ERROR;
       default: {
         wait(&status);  // ждемс чилда, пока он там все поищет
       }
@@ -402,17 +404,21 @@ STATUS_CODE do_action(FILE **file, const char **const action,
       case 0: {
         char BUF[FILENAME_MAX];
         if (NULL == get_absolute_path(*filename, BUF)) {
-          return MEMORY_ERROR;
+          // return MEMORY_ERROR;
+          exit(MEMORY_ERROR);
         }
         if (SUCCESS != find(*file, attr)) {
           printf("%s не нашлось в %s :(", *attr, BUF);
-          return NULL_PTR;
+          // return NULL_PTR;
+          exit(NULL_PTR);
         }
         printf("%s был найден в %s\n", *attr, BUF);
-        return SUCCESS;
+        // return SUCCESS;
+        exit(SUCCESS);
       }
       case -1:
-        return FORK_ERROR;
+        // return FORK_ERROR;
+          exit(FORK_ERROR);
       default: {
         wait(&status);  // ждемс чилда, пока он там все поищет
         // printf("st=%d\n",status);
