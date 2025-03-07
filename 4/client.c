@@ -6,14 +6,14 @@
 #include "../include/base.h"
 #include "msgq.h"
 
-STATUS_CODE read_cmd(FILE *fin, char** res) {
+STATUS_CODE read_cmd(FILE *fin, char **res) {
   if (fin == NULL) {
     return NULL_PTR;
   }
   char c;
   size_t buf_cap = 15;
   size_t buf_size = 0;
-  char *buf = (char *)malloc(buf_cap);
+  char *buf = (char *) malloc(buf_cap);
   if (buf == NULL) {
     return MEMORY_ERROR;
   }
@@ -27,14 +27,14 @@ STATUS_CODE read_cmd(FILE *fin, char** res) {
     }
     if (buf_size >= buf_cap) {
       buf_cap *= 2;
-      char *tmp = (char *)realloc(buf, buf_cap);
+      char *tmp = (char *) realloc(buf, buf_cap);
       if (tmp == NULL) {
         FREE_AND_NULL(buf);
         return MEMORY_ERROR;
       }
       buf = tmp;
     }
-    buf[buf_size++] = (char)tolower(c);
+    buf[buf_size++] = (char) tolower(c);
   }
   buf[buf_size] = '\0';
 
@@ -43,8 +43,8 @@ STATUS_CODE read_cmd(FILE *fin, char** res) {
   return SUCCESS;
 }
 
-STATUS_CODE cmd_check(char * cpy) {
-  if (cpy == NULL){return NULL_PTR;}
+STATUS_CODE cmd_check(char *cpy) {
+  if (cpy == NULL) { return NULL_PTR; }
 
   const char *cmd = strtok(cpy, " ");
   const char *arg = strtok(NULL, " ");
@@ -56,17 +56,20 @@ STATUS_CODE cmd_check(char * cpy) {
   }
 
   if (strcmp(cmd, "take") != 0 &&
-    strcmp(cmd, "put") != 0 &&
-    strcmp(cmd, "move") != 0)
-  {printf("%s\n", cpy);
+      strcmp(cmd, "put") != 0 &&
+      strcmp(cmd, "move") != 0) {
+    printf("%s\n", cpy);
     return INPUT_ERROR;
   }
 
-  if ((strcmp(cmd, "put") == 0 || strcmp(cmd, "move") == 0) && arg != 0) {printf("3");
+  if ((strcmp(cmd, "put") == 0 || strcmp(cmd, "move") == 0) && arg != 0) {
+    printf("3");
     return INPUT_ERROR;
   }
 
-  if (strcmp(cmd, "take") == 0 && (arg == NULL || (strcmp(arg, "goat") != 0 && strcmp(arg, "wolf") != 0 && strcmp(arg, "cabbage") != 0))) {
+  if (strcmp(cmd, "take") == 0 && (arg == NULL || (
+                                     strcmp(arg, "goat") != 0 && strcmp(arg, "wolf") != 0 && strcmp(arg, "cabbage") !=
+                                     0))) {
     printf("%s\n", cpy);
     return INPUT_ERROR;
   }
@@ -89,6 +92,7 @@ int main(const int argc, char *argv[]) {
   key_t msgq_key;
   int server_qid, client_qid;
   msg client_msg, server_msg;
+  int st;
 
   for (size_t i = 0; i < 35; i++) {
     client_msg.data.buf[i] = 0;
@@ -122,9 +126,10 @@ int main(const int argc, char *argv[]) {
   // char line[27];
 
   while (!feof(file)) {
-    int st = read_cmd(file, &line);
+    st = read_cmd(file, &line);
     const size_t slen = strlen(line);
-    if (st != SUCCESS || slen == 0) {FCLOSE(file);
+    if (st != SUCCESS || slen == 0) {
+      FCLOSE(file);
       FREE_AND_NULL(line);
       return st;
     }
@@ -132,21 +137,25 @@ int main(const int argc, char *argv[]) {
       printf("Введена неизвестная команда!\n");
       return INPUT_ERROR;
     }
-    if (line[slen-1] == '\n') line[slen-1] = '\0';
-  // while (line = myfgets(file)){
-
+    if (line[slen - 1] == '\n') line[slen - 1] = '\0';
+    // while (line = myfgets(file)){
 
 
     /// client_msg.data.buf - команда
 
-   char* cpy = strdup(line);
-    if (cpy == NULL)
-    {FREE_AND_NULL(line);FCLOSE(file);return MEMORY_ERROR;}
+    char *cpy = strdup(line);
+    if (cpy == NULL) {
+      FREE_AND_NULL(line);
+      FCLOSE(file);
+      return MEMORY_ERROR;
+    }
 
     st = cmd_check(cpy);
     if (st == INPUT_ERROR) {
       printf("Неправильный ввод!\n");
-      FREE_AND_NULL(line);FCLOSE(file);FREE_AND_NULL(cpy);
+      FREE_AND_NULL(line);
+      FCLOSE(file);
+      FREE_AND_NULL(cpy);
       return st;
     }
 
@@ -155,23 +164,33 @@ int main(const int argc, char *argv[]) {
 
     // вывод
     if (msgsnd(server_qid, &client_msg, sizeof(client_msg.data), 0) == -1) {
-      perror("client_qid msgsnd\n");FREE_AND_NULL(line);FCLOSE(file);FREE_AND_NULL(cpy);
+      perror("client_qid msgsnd\n");
+      FREE_AND_NULL(line);
+      FCLOSE(file);
+      FREE_AND_NULL(cpy);
       return INPUT_ERROR;
     }
+    FREE_AND_NULL(cpy);
 
-    // чтение с сервера
-    if (msgrcv(server_qid, &server_msg, sizeof(server_msg.data), 0, 0) == -1) {
-      perror("server_qid msgrcv");FREE_AND_NULL(line);FCLOSE(file);FREE_AND_NULL(cpy);
-      return INPUT_ERROR;
-    }
-
-    FREE_AND_NULL(line);FREE_AND_NULL(cpy);
   }
+    // чтение с сервера
+    // if (msgrcv(server_qid, &server_msg, sizeof(server_msg.data), 0, 0) == -1) {
+    //   perror("server_qid msgrcv");
+    //   FREE_AND_NULL(line);
+    //   FCLOSE(file);
+    //   // FREE_AND_NULL(cpy);
+    //   return INPUT_ERROR;
+    // }
+
+    FREE_AND_NULL(line);
+    // FREE_AND_NULL(cpy);
+
 
   FCLOSE(file);
 
   if (msgctl(client_qid, IPC_RMID, NULL) == -1) {
-    perror("msgctl client_qid");FCLOSE(file);
+    perror("msgctl client_qid");
+    FCLOSE(file);
     return INPUT_ERROR;
   }
 

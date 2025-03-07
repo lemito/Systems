@@ -6,7 +6,7 @@
 #include <sys/msg.h>
 
 #define MSGQ_KEY "/home/lemito/Desktop/my_sems/msgq"
-#define PROJECT_ID 'M'
+#define PROJECT_ID 'l'
 
 typedef struct msg_text {
     int qid;
