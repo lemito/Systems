@@ -1,0 +1,5 @@
+take wolf;
+take goat;
+take cabbage;
+put;
+move;
