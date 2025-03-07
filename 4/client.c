@@ -62,7 +62,7 @@ STATUS_CODE cmd_check(char *cpy) {
     return INPUT_ERROR;
   }
 
-  if ((strcmp(cmd, "put") == 0 || strcmp(cmd, "move") == 0) && arg != 0) {
+  if ((strcmp(cmd, "put") == 0 || strcmp(cmd, "move") == 0) && arg != NULL) {
     printf("3");
     return INPUT_ERROR;
   }
@@ -70,7 +70,7 @@ STATUS_CODE cmd_check(char *cpy) {
   if (strcmp(cmd, "take") == 0 && (arg == NULL || (
                                      strcmp(arg, "goat") != 0 && strcmp(arg, "wolf") != 0 && strcmp(arg, "cabbage") !=
                                      0))) {
-    printf("%s\n", cpy);
+    printf("4%s\n", cpy);
     return INPUT_ERROR;
   }
 

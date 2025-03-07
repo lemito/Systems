@@ -63,6 +63,7 @@ int main() {
     // берег на котором сейчас лодка
     char cur_bereg = 0; // 0 == 1; 1 == 2
     char boat = 0;
+    char buf[BUFSIZ] = {0};
 
     for (;;) {
         /**
@@ -87,7 +88,7 @@ int main() {
         take goat
         move
         put
-        take cabagge
+        take cabage
         move
         put
         move
@@ -126,6 +127,8 @@ int main() {
         }
         FREE_AND_NULL(cpy);
 
+        cpy = strdup(msgq.data.buf);
+
         const char *cmd = strtok(cpy, " ");
         const char *arg = strtok(NULL, " ");
 
@@ -134,14 +137,20 @@ int main() {
             // меняем берег
             cur_bereg = cur_bereg == 0 ? 1 : 0;
         } else if (strcmp(cmd, "put") == 0) {
+            if (boat == 0) {
+                strcpy(buf, "Лодка пуста");
+                break;
+            }
             // опусташаем содержимое лодки на берег
             switch (cur_bereg) {
                 case 0: {
                     first_bereg[boat - 1] = boat;
+                    boat = 0;
                 }
                 break;
                 case 1: {
                     second_bereg[boat - 1] = boat;
+                    boat = 0;
                 }
                 break;
                 default: {
@@ -149,16 +158,22 @@ int main() {
                 break;
             }
         } else if (strcmp(cmd, "take") == 0) {
+            if (boat != 0) {
+                strcpy(buf, "Лодка не пуста");
+                break;
+            }
             // берем с берега кого-либо и кладем в лодку
             if (strcmp(arg, "wolf") == 0) {
                 // волк
                 switch (cur_bereg) {
                     case 0: {
                         boat = first_bereg[0];
+                        first_bereg[0] = 0;
                     }
                     break;
                     case 1: {
                         boat = second_bereg[0];
+                        second_bereg[0] = 0;
                     }
                     break;
                     default: {
@@ -170,10 +185,12 @@ int main() {
                 switch (cur_bereg) {
                     case 0: {
                         boat = first_bereg[1];
+                        first_bereg[1] = 0;
                     }
                     break;
                     case 1: {
                         boat = second_bereg[1];
+                        second_bereg[1] = 0;
                     }
                     break;
                     default: {
@@ -185,10 +202,12 @@ int main() {
                 switch (cur_bereg) {
                     case 0: {
                         boat = first_bereg[2];
+                        first_bereg[2] = 0;
                     }
                     break;
                     case 1: {
                         boat = second_bereg[2];
+                        second_bereg[2] = 0;
                     }
                     break;
                     default: {
@@ -199,12 +218,20 @@ int main() {
         }
 
         // список плохих ситуаций - коза-капуста x2, волк-коза x2
-        const char bans[][] = {{2, 3}, {3, 2}, {1, 2}, {2, 1}};
+        const char bans[4][2] = {{2, 3}, {3, 2}, {1, 2}, {2, 1}};
+        const char NULL_F[3] = {0, 0, 0};
+        const char RES[3] = {1, 2, 3};
 
-        if (strstr(first_bereg, bans[0]) != NULL || strstr(first_bereg, bans[1]) != NULL) {
+        if (strstr(first_bereg, bans[0]) != NULL || strstr(first_bereg, bans[1]) != NULL ||
+            strstr(second_bereg, bans[0]) != NULL || strstr(second_bereg, bans[1]) != NULL) {
             printf("Коза съела капусту :(\n");
-        } else if (strstr(first_bereg, bans[2]) != NULL || strstr(first_bereg, bans[3]) != NULL) {
+        } else if (strstr(first_bereg, bans[2]) != NULL || strstr(first_bereg, bans[3]) != NULL ||
+                   strstr(second_bereg, bans[2]) != NULL || strstr(second_bereg, bans[3]) != NULL) {
             printf("Волк съел козу :(\n");
+        } else if (strcmp(first_bereg, NULL_F) == 0 && strcmp(second_bereg, RES) == 0) {
+            printf("Все счастливо переплыли на другой берег\n");FREE_AND_NULL(cpy);
+            break;
+            // strcat(buf, "Все счастливо переплыли на другой берег\n");
         }
 
         // const char msg[] = "Мяу!\0";
@@ -215,6 +242,8 @@ int main() {
         //     FREE_AND_NULL(cpy);
         //     return INPUT_ERROR;
         // }
+
+        printf("buf=%s\n", buf);
 
         FREE_AND_NULL(cpy);
     }
