@@ -65,7 +65,6 @@ int main() {
     char boat = 0;
 
     for (;;) {
-
         /**
         =====================
         Решение:
@@ -197,6 +196,15 @@ int main() {
                     break;
                 }
             }
+        }
+
+        // список плохих ситуаций - коза-капуста x2, волк-коза x2
+        const char bans[][] = {{2, 3}, {3, 2}, {1, 2}, {2, 1}};
+
+        if (strstr(first_bereg, bans[0]) != NULL || strstr(first_bereg, bans[1]) != NULL) {
+            printf("Коза съела капусту :(\n");
+        } else if (strstr(first_bereg, bans[2]) != NULL || strstr(first_bereg, bans[3]) != NULL) {
+            printf("Волк съел козу :(\n");
         }
 
         // const char msg[] = "Мяу!\0";
