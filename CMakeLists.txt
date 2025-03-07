@@ -16,4 +16,6 @@ add_executable(6s 6/server.c include/base.h 6/shared.h)
 add_executable(meow meow.cpp)
 
 add_executable(5 5/main.c include/base.h)
-add_executable(4 4/main.c include/base.h)
+
+add_executable(4c 4/client.c include/base.h)
+add_executable(4s 4/server.c include/base.h)
