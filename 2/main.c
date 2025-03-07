@@ -406,7 +406,7 @@ STATUS_CODE do_action(FILE **file, const char **const action,
         }
         if (SUCCESS != find(*file, attr)) {
           printf("%s не нашлось в %s :(", *attr, BUF);
-          return SUCCESS;
+          return NULL_PTR;
         }
         printf("%s был найден в %s\n", *attr, BUF);
         return SUCCESS;
@@ -415,6 +415,12 @@ STATUS_CODE do_action(FILE **file, const char **const action,
         return FORK_ERROR;
       default: {
         wait(&status);  // ждемс чилда, пока он там все поищет
+        // printf("st=%d\n",status);
+        switch (status) {
+          case MEMORY_ERROR: {return MEMORY_ERROR;}
+          // case SUCCESS: {printf("%s был найден в %s\n", *attr, BUF);} break;
+          // case NULL_PTR: {printf("%s не нашлось в %s :(", *attr, BUF);}
+        }
       }
     }
   } else {
