@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "../include/base.h"
 #include "msgq.h"
@@ -106,6 +107,7 @@ int main(const int argc, char *argv[]) {
   int server_qid, client_qid;
   msg client_msg, server_msg;
   int st;
+  char auth = 1;
 
   for (size_t i = 0; i < 35; i++) {
     client_msg.data.buf[i] = 0;
@@ -173,18 +175,22 @@ int main(const int argc, char *argv[]) {
       return st;
     }
 
+    if (auth) {
+      snprintf(client_msg.data.buf, 35, "%d", getpid());
+    }
+
     // // подготовк к выводу
-    // strcpy(client_msg.data.buf, line);
-    //
-    // // вывод
-    // if (msgsnd(server_qid, &client_msg, sizeof(client_msg.data), 0) == -1) {
-    //   perror("client_qid msgsnd\n");
-    //   FREE_AND_NULL(line);
-    //   FCLOSE(file);
-    //   FREE_AND_NULL(cpy);
-    //   return INPUT_ERROR;
-    // }
-    // FREE_AND_NULL(cpy);
+    strcpy(client_msg.data.buf, line);
+
+    // вывод
+    if (msgsnd(server_qid, &client_msg, sizeof(client_msg.data), 0) == -1) {
+      perror("client_qid msgsnd\n");
+      FREE_AND_NULL(line);
+      FCLOSE(file);
+      FREE_AND_NULL(cpy);
+      return INPUT_ERROR;
+    }
+    FREE_AND_NULL(cpy);
   }
   // чтение с сервера
   // if (msgrcv(server_qid, &server_msg, sizeof(server_msg.data), 0, 0) == -1) {
