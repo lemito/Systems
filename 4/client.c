@@ -91,7 +91,7 @@ STATUS_CODE cmd_check(char *cpy) {
   return SUCCESS;
 }
 
-int main(const int argc, char *argv[]) {
+int main(const int argc, const char *argv[]) {
   if (argc != 2) {
     printf("Используй %s <файл>\n", argv[0]);
     return INPUT_ERROR;
@@ -106,7 +106,7 @@ int main(const int argc, char *argv[]) {
   key_t msgq_key;
   int server_qid, client_qid;
   msg client_msg, server_msg;
-  int st;
+  int st = 0;
   char auth = 1;
 
   for (size_t i = 0; i < 35; i++) {
