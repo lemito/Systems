@@ -6,6 +6,8 @@
 #include "../include/base.h"
 #include "msgq.h"
 
+// TODO: "идентификация" ???
+
 STATUS_CODE read_cmd(FILE *fin, char **res) {
   if (fin == NULL) {
     return NULL_PTR;
