@@ -10,14 +10,14 @@
 #define MASK_NUM 0x27
 
 int main(void) {
-    FILE *fp = fopen("test.txt", "wb");
+    FILE *fp = fopen("meow.txt", "wb");
     if (fp == NULL) {
         return MEMORY_ERROR;
     }
     size_t cnt = 0;
-    for (unsigned int i = 0; i < N; i++) {
-        if ((i & MASK_NUM) > 0) {
-            fwrite(&i, sizeof(unsigned int), 1, fp);
+    for (int i = 0; i < N; i++) {
+        if ((i & MASK_NUM) == MASK_NUM) {
+            fwrite(&i, sizeof(int), 1, fp);
             printf("%d\n", i);
             cnt++;
         }
