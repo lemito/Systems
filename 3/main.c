@@ -67,6 +67,9 @@ void *WORKER(void *p) {
      * если все берут вилки в одном порядке, то обязательно по кругу встретяться
      * и заблочат друг друга; поэтому надо делать так, что четные берут сначала
      * правую, а четные - сначала леву, так есть шанс что хоть кто-то возьмет
+
+     семафор - "официант", регулирует как именно будут взяты вилки (нельзя брать
+     ту, которая уже у кого-то)
      */
     if (philo_id & 1) {
       if (SUCCESS != SEM_WAIT(semid, RIGHT_PORIGE(philo_id, N))) {
@@ -89,9 +92,13 @@ void *WORKER(void *p) {
     printf("Нямно покушал %d\n", philo_id);
     sleep(1);
 
-    SEM_POST(semid, LEFT_PORIGE(philo_id, N));
-    SEM_POST(semid, RIGHT_PORIGE(philo_id, N));
-    printf("Закончили с %d, идем дальше\n", philo_id);
+    if (SUCCESS != SEM_POST(semid, LEFT_PORIGE(philo_id, N))) {
+      printf("Не удалось скинуть вилку\n");
+    }
+    if (SUCCESS != SEM_POST(semid, RIGHT_PORIGE(philo_id, N))) {
+      printf("Не удалось скинуть вилку\n");
+    }
+    printf("Закончили с %d, он снова думает. Идем дальше\n", philo_id);
     max_cycle--;
   }
 
@@ -119,9 +126,10 @@ sv | -1 | -1 |
 все поели, все подумали => все счастливы
 */
 int main(void) {
+  // семафор - официант
   const key_t sem_key = IPC_PRIVATE;
   int semid = 0;
-  int PHILOSOPHER_CNT = 0;
+  int PHILOSOPHER_CNT = 0;  // колво семафоров/потоков(и философов)
   int st = 0;
   pthread_t *philosophers = NULL;  // стол философов
   useful_things *args = NULL;      // мета инфа
@@ -164,7 +172,10 @@ int main(void) {
   for (int philo_id = 0; philo_id < PHILOSOPHER_CNT; philo_id++) {
     union semun arg;
     arg.val = 1;
-    semctl(semid, philo_id, SETVAL, arg);
+    st = semctl(semid, philo_id, SETVAL, arg);
+    if (st == -1) {
+      return SEM_ERR;
+    }
     // semctl(semid, philo_id, SETVAL, 1);
   }
 
@@ -172,11 +183,17 @@ int main(void) {
     args[philo_id].semid = semid;
     args[philo_id].cnt = PHILOSOPHER_CNT;
     args[philo_id].philo_id = philo_id;
-    pthread_create(philosophers + philo_id, NULL, WORKER, args + philo_id);
+    st = pthread_create(philosophers + philo_id, NULL, WORKER, args + philo_id);
+    if (st == -1) {
+      return MEMORY_ERROR;
+    }
   }
 
   for (int philo_id = 0; philo_id < PHILOSOPHER_CNT; philo_id++) {
-    pthread_join(philosophers[philo_id], NULL);
+    st = pthread_join(philosophers[philo_id], NULL);
+    if (st == -1) {
+      return MEMORY_ERROR;
+    }
   }
 
   if (-1 == semctl(semid, PHILOSOPHER_CNT, IPC_RMID)) {
@@ -186,7 +203,10 @@ int main(void) {
     return SEM_ERR;
   }
 
-  semctl(semid, 0, IPC_RMID);
+  st = semctl(semid, 0, IPC_RMID, 0);
+  if (st == -1) {
+    return MEMORY_ERROR;
+  }
   FREE_AND_NULL(philosophers);
   FREE_AND_NULL(args);
 
