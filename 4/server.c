@@ -237,8 +237,10 @@ int main() {
     //     return INPUT_ERROR;
     // }
 
-    printf("buf=%s\n", buf);
-
     FREE_AND_NULL(cpy);
   }
+
+  printf("%s\n", buf);
+
+  return 0;
 }
