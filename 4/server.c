@@ -5,11 +5,9 @@
 #include "../include/base.h"
 #include "msgq.h"
 
-enum POSITIONS {
-  WOLF = 0,
-  GOAT = 1,
-  CABBAGE = 2
-};
+enum POSITIONS { WOLF = 0, GOAT = 1, CABBAGE = 2 };
+enum ANIMALS { NOTHING = 0, WOLF_A = 1, GOAT_A = 2, CABBAGE_A = 3 };
+
 
 STATUS_CODE cmd_check(char *cpy) {
   if (cpy == NULL) {
@@ -62,7 +60,8 @@ int main() {
       qid = msgget(msgq_key, 0666);
       msgctl(qid, IPC_RMID, NULL);
       qid = msgget(msgq_key, 0666 | IPC_CREAT);
-      if (qid == -1) {perror("msgget server_qid\n");
+      if (qid == -1) {
+        perror("msgget server_qid\n");
         return INPUT_ERROR;
       }
     }
@@ -71,18 +70,20 @@ int main() {
 
   // первый берег -- начальный. вначале там все
   // 0 - никто; 1 - волк, 2 - коза, 3 - капуста
-  char first_bereg[3] = {1, 2, 3};
+  char first_bereg[3] = {WOLF_A, GOAT_A, CABBAGE_A};
   // второй берег -- изначально там никого нет
-  char second_bereg[3] = {0, 0, 0};
+  char second_bereg[3] = {NOTHING, NOTHING, NOTHING};
   // берег на котором сейчас лодка
   char cur_bereg = 0;  // 0 == 1; 1 == 2
   char boat = 0;
-  char buf[BUFSIZ] = {0};
+  char buf[512] = {0};
 
   // список плохих ситуаций - коза-капуста x2, волк-коза x2
-  const char bans[4][2] = {{2, 3}, {3, 2}, {1, 2}, {2, 1}};
-  const char NULL_F[3] = {0, 0, 0};
-  const char RES[4] = {1, 2, 3, 0};
+  const char bans[4][2] = {{GOAT_A, CABBAGE_A}, {CABBAGE_A, GOAT_A}, {WOLF_A, GOAT_A}, {GOAT_A, WOLF_A}};
+
+  // условие "выигрыша" - первый берег пуст, а второй - с вещами
+  const char NULL_F[3] = {NOTHING, NOTHING, NOTHING};
+  const char RES[4] = {WOLF_A, GOAT_A, CABBAGE_A, 0};
 
   for (;;) {
     /**
@@ -124,7 +125,8 @@ int main() {
       return INPUT_ERROR;
     }
 
-    printf("Сейчас мы работаем с клиентом №%ld\n", msgq.msg_type);
+    printf("Сейчас мы работаем с клиентом №%ld и обрабатываем %s\n",
+           msgq.msg_type, msgq.data.buf);
 
     char *cpy = strdup(msgq.data.buf);
     if (cpy == NULL) {
@@ -132,12 +134,12 @@ int main() {
     }
 
     const STATUS_CODE st = cmd_check(cpy);
+    msgq.msg_type = 1;
+    msgq.data.qid = qid;
     if (st == INPUT_ERROR) {
-      msgq.msg_type = msgq.data.qid;
-      msgq.data.qid = qid;
       const char msg[] = "Команда неверна\0";
       strncpy(msgq.data.buf, msg, strlen(msg));
-
+      printf("%s\n", msg);
       if (msgsnd(msgq.data.qid, &msgq, sizeof(msgq.data), 0) == -1) {
         perror("client_qid msgsnd");
         FREE_AND_NULL(cpy);
@@ -229,32 +231,33 @@ int main() {
         strstr(first_bereg, bans[1]) != NULL ||
         strstr(second_bereg, bans[0]) != NULL ||
         strstr(second_bereg, bans[1]) != NULL) {
-      printf("Коза съела капусту :(\n");
+      // printf("Коза съела капусту :(\n");
       strcat(buf, "Коза съела капусту :(\n");
     } else if (strstr(first_bereg, bans[2]) != NULL ||
                strstr(first_bereg, bans[3]) != NULL ||
                strstr(second_bereg, bans[2]) != NULL ||
                strstr(second_bereg, bans[3]) != NULL) {
-      printf("Волк съел козу :(\n");
+      // printf("Волк съел козу :(\n");
       strcat(buf, "Волк съел козу :(\n");
     } else if (strcmp(first_bereg, NULL_F) == 0 &&
                strcmp(second_bereg, RES) == 0) {
-      printf("Все счастливо переплыли на другой берег\n");
-      strcat(buf, "Все счастливо переплыли на другой берег\n");
+      // printf("Все счастливо переплыли на другой берег\n");
+      strcat(buf, "Успех!\n");
       FREE_AND_NULL(cpy);
       break;
     }
 
     // const char msg[] = "Мяу!\0";
-    // strncpy(msgq.data.buf, msg, strlen(msg));
-
-    // if (msgsnd(msgq.data.qid, &msgq, sizeof (msgq.data), 0) == -1) {
-    //     perror("client_qid msgsnd");
-    //     FREE_AND_NULL(cpy);
-    //     return INPUT_ERROR;
-    // }
 
     FREE_AND_NULL(cpy);
+  }
+
+  strncpy(msgq.data.buf, buf, strlen(buf));
+
+  if (msgsnd(msgq.data.qid, &msgq, sizeof (msgq.data), 0) == -1) {
+    perror("client_qid msgsnd after work");
+    // FREE_AND_NULL(cpy);
+    return INPUT_ERROR;
   }
 
   printf("%s\n", buf);

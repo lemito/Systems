@@ -197,13 +197,15 @@ int main(const int argc, const char *argv[]) {
   }
 
   // чтение с сервера
-  // if (msgrcv(server_qid, &server_msg, sizeof(server_msg.data), 0, 0) == -1) {
-  //   perror("server_qid msgrcv");
-  //   FREE_AND_NULL(line);
-  //   FCLOSE(file);
-  //   // FREE_AND_NULL(cpy);
-  //   return INPUT_ERROR;
-  // }
+  if (msgrcv(server_qid, &server_msg, sizeof(server_msg.data), 1, 0) == -1) {
+    perror("server_qid msgrcv");
+    FREE_AND_NULL(line);
+    FCLOSE(file);
+    // FREE_AND_NULL(cpy);
+    return INPUT_ERROR;
+  }
+
+  printf("Сервер вернул: %s\n", server_msg.data.buf);
 
   FREE_AND_NULL(line);
   // FREE_AND_NULL(cpy);
