@@ -41,7 +41,7 @@ int main(const int argc, char **argv) {
     *sizee = to_sharing;
     printf("Клиент: точный размер входных данных = %lu байт\n", *sizee);
 
-    if ((skey = ftok(SHM_NAME, 'S')) == -1) {
+    if ((skey = ftok(SHM_NAME, 'p')) == -1) {
         fprintf(stderr, "ftok shm");
         return (INPUT_ERROR);
     }
@@ -49,7 +49,7 @@ int main(const int argc, char **argv) {
         fprintf(stderr, "ftok sem");
         return (INPUT_ERROR);
     }
-    if ((reskey = ftok(SHM_RESULT_NAME, 'r')) == -1) {
+    if ((reskey = ftok(SHM_RESULT_NAME, 'p')) == -1) {
         fprintf(stderr, "ftok reskey");
         return (INPUT_ERROR);
     }

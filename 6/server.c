@@ -29,7 +29,7 @@ STATUS_CODE dir_view(const char *path, char **res, size_t *res_size) {
     struct dirent *dentry = NULL; // инфа о ней
 
     if ((dirp = opendir(result)) == NULL) {
-        fprintf(stderr, "opendir ошибка\n");
+        perror("opendir ошибка\n");
         closedir(dirp);
         return ERROR_OPEN;
     }
@@ -112,13 +112,13 @@ int main(void) {
     if ((sizekey = ftok(INFO_NAME, 'S')) == -1) {
         fprintf(stderr, "ftok sizekey\n");
     }
-    if ((skey = ftok(SHM_NAME, 'S')) == -1) {
+    if ((skey = ftok(SHM_NAME, 'p')) == -1) {
         fprintf(stderr, "ftok shm\n");
     }
     if ((semkey = ftok(SEM_NAME, 'W')) == -1) {
         fprintf(stderr, "ftok sem\n");
     }
-    if ((reskey = ftok(SHM_RESULT_NAME, 'r')) == -1) {
+    if ((reskey = ftok(SHM_RESULT_NAME, 'p')) == -1) {
         fprintf(stderr, "ftok sem\n");
     }
 
@@ -199,6 +199,8 @@ int main(void) {
             continue;
         }
 
+      // printf("===========%s\n", mPtr);
+
         char *res = NULL;
         size_t res_size = 0;
         size_t off = 0;
@@ -207,7 +209,7 @@ int main(void) {
             size_t len = 0;
             printf("Сервер: обрабатываем путь: %s\n", mPtr + off);
             if (dir_view(mPtr + off, &pre_res, &len) != SUCCESS) {
-                fprintf(stderr, "dir_view");
+                fprintf(stderr, "dir_view\n");
                 off += strlen(mPtr + off) + 1;
                 continue;
             }
