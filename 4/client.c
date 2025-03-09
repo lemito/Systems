@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "../include/base.h"
@@ -109,6 +110,8 @@ int main(const int argc, const char *argv[]) {
   int st = 0;
   char auth = 1;
 
+  srand(time(NULL));
+
   for (size_t i = 0; i < 35; i++) {
     client_msg.data.buf[i] = 0;
     server_msg.data.buf[i] = 0;
@@ -135,7 +138,7 @@ int main(const int argc, const char *argv[]) {
     return ERROR_OPEN;
   }
 
-  client_msg.msg_type = 1;
+  client_msg.msg_type = (rand() % getpid()) + client_qid;
   client_msg.data.qid = client_qid;
 
   // char line[27];
@@ -175,9 +178,9 @@ int main(const int argc, const char *argv[]) {
       return st;
     }
 
-    if (auth) {
-      snprintf(client_msg.data.buf, 35, "%d", getpid());
-    }
+    // if (auth) {
+    //   snprintf(client_msg.data.buf, 35, "%d", getpid());
+    // }
 
     // // подготовк к выводу
     strcpy(client_msg.data.buf, line);
@@ -192,6 +195,7 @@ int main(const int argc, const char *argv[]) {
     }
     FREE_AND_NULL(cpy);
   }
+
   // чтение с сервера
   // if (msgrcv(server_qid, &server_msg, sizeof(server_msg.data), 0, 0) == -1) {
   //   perror("server_qid msgrcv");

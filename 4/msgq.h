@@ -10,7 +10,7 @@
 
 typedef struct msg_text {
     int qid;
-    char buf[35];
+    char buf[40];
   } msg_text;
   
   typedef struct msg {
