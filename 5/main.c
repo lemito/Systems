@@ -73,7 +73,7 @@ STATUS_CODE man_wants_to_enter(data_t* p) {
 
   while (p->state == 'W' || p->cur_cnt >= p->N) {
     SEM_POST(p->semid, MUTEX);  // разблок мьютекса
-    SEM_WAIT(p->semid, MAN);  // так уж и быть, отдаем ванную комнату мужикам
+    SEM_WAIT(p->semid, MAN);    // так уж и быть, отдаем ванную комнату мужикам
     SEM_WAIT(p->semid, MUTEX);  // блок
   }
 
@@ -189,10 +189,10 @@ void* work2(void* p) {
 <общий> <man> <woman> => 3
 
 */
-int main(int argc, char const* argv[]) {
-  int N, PEOPLES;  // N - maxлюдей, PEOPLES - все люди
-  int st;          // st - проверки
-  key_t semkey;    // ключ сема
+int main(void) {
+  int N;         // N - maxлюдей, PEOPLES - все люди
+  int st;        // st - проверки
+  key_t semkey;  // ключ сема
   int semid;
   pthread_t* sim;  // потоки симуляции
   data_t targ;     // аргумент потока
@@ -262,7 +262,7 @@ int main(int argc, char const* argv[]) {
     semctl(semid, i, SETVAL, arg);
   }
 
-  PEOPLES = man + woman;
+  int PEOPLES = man + woman;
 
   sim = (pthread_t*)malloc(sizeof(pthread_t) * PEOPLES);
   if (sim == NULL) {
@@ -285,19 +285,20 @@ int main(int argc, char const* argv[]) {
   for (size_t i = 0; i < man; i++) {
     st = pthread_create(sim + i, NULL, work, &targ);
     if (st == -1) {
+      FREE_AND_NULL(sim);
       return THREAD_ERROR;
     }
   }
   for (size_t i = man; i < PEOPLES; i++) {
     st = pthread_create(sim + i, NULL, work2, &targ);
-    if (st == -1) {
+    if (st == -1) {FREE_AND_NULL(sim);
       return THREAD_ERROR;
     }
   }
 
   for (size_t i = 0; i < PEOPLES; i++) {
     st = pthread_join(sim[i], NULL);
-    if (st == -1) {
+    if (st == -1) {FREE_AND_NULL(sim);
       return THREAD_ERROR;
     }
   }
