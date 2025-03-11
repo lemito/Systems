@@ -8,7 +8,6 @@
 enum POSITIONS { WOLF = 0, GOAT = 1, CABBAGE = 2 };
 enum ANIMALS { NOTHING = 0, WOLF_A = 1, GOAT_A = 2, CABBAGE_A = 3 };
 
-
 STATUS_CODE cmd_check(char *cpy) {
   if (cpy == NULL) {
     return NULL_PTR;
@@ -44,13 +43,56 @@ STATUS_CODE cmd_check(char *cpy) {
   return SUCCESS;
 }
 
+typedef struct db {
+  pid_t *data;
+  size_t siz;
+  size_t cap;
+} db_t;
+
+/// АЛИАСЫ ДЛЯ ЧЕКЕРА
+#define INSERTED (~6)
+#define FINDED (~5)
+
+STATUS_CODE check_or_insert(db_t *db, pid_t pid) {
+  if (NULL == db) {
+    return NULL_PTR;
+  }
+
+  for (size_t i = 0; i < db->siz; i++) {
+    if (db->data[i] == pid) {
+      return FINDED;
+    }
+  }
+
+  if (db->cap >= db->siz) {
+    pid_t *tmp = realloc(db->data, db->cap * 2);
+    if (NULL == tmp) {
+      FREE_AND_NULL(db->data);
+      return MEMORY_ERROR;
+    }
+    db->data = tmp;
+    db->cap *= 2;
+  }
+  db->data[db->siz++] = pid;
+
+  return INSERTED;
+}
+
 int main() {
   key_t msgq_key;
   int qid;
   msg msgq;
+  db_t db;
+  db.cap = 5;
+  db.siz = 0;
+  db.data = malloc(db.cap * sizeof(pid_t));
+  if (db.data == NULL) {
+    return MEMORY_ERROR;
+  }
 
   if ((msgq_key = ftok(MSGQ_KEY, PROJECT_ID)) == -1) {
     perror("ftok msgq_key\n");
+    FREE_AND_NULL(db.data);
     return INPUT_ERROR;
   }
 
@@ -62,6 +104,7 @@ int main() {
       qid = msgget(msgq_key, 0666 | IPC_CREAT);
       if (qid == -1) {
         perror("msgget server_qid\n");
+        FREE_AND_NULL(db.data);
         return INPUT_ERROR;
       }
     }
@@ -79,7 +122,10 @@ int main() {
   char buf[512] = {0};
 
   // список плохих ситуаций - коза-капуста x2, волк-коза x2
-  const char bans[4][2] = {{GOAT_A, CABBAGE_A}, {CABBAGE_A, GOAT_A}, {WOLF_A, GOAT_A}, {GOAT_A, WOLF_A}};
+  const char bans[4][2] = {{GOAT_A, CABBAGE_A},
+                           {CABBAGE_A, GOAT_A},
+                           {WOLF_A, GOAT_A},
+                           {GOAT_A, WOLF_A}};
 
   // условие "выигрыша" - первый берег пуст, а второй - с вещами
   const char NULL_F[3] = {NOTHING, NOTHING, NOTHING};
@@ -122,14 +168,25 @@ int main() {
 
     if (msgrcv(qid, &msgq, sizeof(msgq.data), 0, 0) == -1) {
       perror("msgsrv qid");
+      FREE_AND_NULL(db.data);
       return INPUT_ERROR;
     }
 
     printf("Сейчас мы работаем с клиентом №%ld и обрабатываем %s\n",
            msgq.msg_type, msgq.data.buf);
 
+    int check_st = check_or_insert(&db, msgq.msg_type);
+    if (check_st == MEMORY_ERROR) {
+      FREE_AND_NULL(db.data);
+      return MEMORY_ERROR;
+    } else if (check_st == NULL_PTR) {
+      FREE_AND_NULL(db.data);
+      return NULL_PTR;
+    }
+
     char *cpy = strdup(msgq.data.buf);
     if (cpy == NULL) {
+      FREE_AND_NULL(db.data);
       return MEMORY_ERROR;
     }
 
@@ -143,12 +200,18 @@ int main() {
       if (msgsnd(msgq.data.qid, &msgq, sizeof(msgq.data), 0) == -1) {
         perror("client_qid msgsnd");
         FREE_AND_NULL(cpy);
+        FREE_AND_NULL(db.data);
+
         return INPUT_ERROR;
       }
     }
     FREE_AND_NULL(cpy);
 
     cpy = strdup(msgq.data.buf);
+    if (cpy == NULL) {
+      FREE_AND_NULL(db.data);
+      return MEMORY_ERROR;
+    }
 
     const char *cmd = strtok(cpy, " ");
     const char *arg = strtok(NULL, " ");
@@ -254,10 +317,12 @@ int main() {
 
   strncpy(msgq.data.buf, buf, strlen(buf));
 
-  if (msgsnd(msgq.data.qid, &msgq, sizeof (msgq.data), 0) == -1) {
-    perror("client_qid msgsnd after work");
-    // FREE_AND_NULL(cpy);
-    return INPUT_ERROR;
+  for (size_t i = 0; i < db.siz; i++) {
+    if (msgsnd(db.data[i], &msgq, sizeof(msgq.data), 0) == -1) {
+      perror("client_qid db.data[i] msgsnd after work");
+      FREE_AND_NULL(db.data);
+      return INPUT_ERROR;
+    }
   }
 
   printf("%s\n", buf);

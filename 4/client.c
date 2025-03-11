@@ -138,7 +138,9 @@ int main(const int argc, const char* argv[]) {
     return ERROR_OPEN;
   }
 
-  client_msg.msg_type = (rand() % getpid()) + client_qid;
+  pid_t my_pid = getpid();
+
+  client_msg.msg_type = my_pid;
   client_msg.data.qid = client_qid;
 
   // char line[27];
@@ -197,7 +199,7 @@ int main(const int argc, const char* argv[]) {
   }
 
   // чтение с сервера
-  if (msgrcv(server_qid, &server_msg, sizeof(server_msg.data), 1, 0) == -1) {
+  if (msgrcv(server_qid, &server_msg, sizeof(server_msg.data), my_pid, 0) == -1) {
     perror("server_qid msgrcv");
     FREE_AND_NULL(line);
     FCLOSE(file);
