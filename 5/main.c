@@ -51,6 +51,7 @@ STATUS_CODE woman_wants_to_enter(data_t* p) {
   }
   SEM_WAIT(p->semid, MUTEX);
 
+  // используем спин-лок
   while (p->state == 'M' || p->cur_cnt >= p->N) {
     SEM_POST(p->semid, MUTEX);  // разблок мьютекса
     SEM_WAIT(p->semid, WOMAN);  // так уж и быть, отдаем ванную комнату мужикам
@@ -71,6 +72,7 @@ STATUS_CODE man_wants_to_enter(data_t* p) {
   }
   SEM_WAIT(p->semid, MUTEX);
 
+  // используем спин-лок
   while (p->state == 'W' || p->cur_cnt >= p->N) {
     SEM_POST(p->semid, MUTEX);  // разблок мьютекса
     SEM_WAIT(p->semid, MAN);  // так уж и быть, отдаем ванную комнату мужикам
