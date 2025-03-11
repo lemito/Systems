@@ -73,7 +73,7 @@ STATUS_CODE man_wants_to_enter(data_t* p) {
 
   while (p->state == 'W' || p->cur_cnt >= p->N) {
     SEM_POST(p->semid, MUTEX);  // разблок мьютекса
-    SEM_WAIT(p->semid, MAN);    // так уж и быть, отдаем ванную комнату мужикам
+    SEM_WAIT(p->semid, MAN);  // так уж и быть, отдаем ванную комнату мужикам
     SEM_WAIT(p->semid, MUTEX);  // блок
   }
 
@@ -291,14 +291,16 @@ int main(void) {
   }
   for (size_t i = man; i < PEOPLES; i++) {
     st = pthread_create(sim + i, NULL, work2, &targ);
-    if (st == -1) {FREE_AND_NULL(sim);
+    if (st == -1) {
+      FREE_AND_NULL(sim);
       return THREAD_ERROR;
     }
   }
 
   for (size_t i = 0; i < PEOPLES; i++) {
     st = pthread_join(sim[i], NULL);
-    if (st == -1) {FREE_AND_NULL(sim);
+    if (st == -1) {
+      FREE_AND_NULL(sim);
       return THREAD_ERROR;
     }
   }
