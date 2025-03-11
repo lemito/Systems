@@ -51,10 +51,10 @@ STATUS_CODE woman_wants_to_enter(data_t* p) {
   }
   SEM_WAIT(p->semid, MUTEX);
 
-  // используем спин-лок
+  // используем типа спин-лок
   while (p->state == 'M' || p->cur_cnt >= p->N) {
     SEM_POST(p->semid, MUTEX);  // разблок мьютекса
-    // SEM_WAIT(p->semid, WOMAN);  // так уж и быть, отдаем ванную комнату мужикам
+    SEM_WAIT(p->semid, WOMAN);  // так уж и быть, отдаем ванную комнату мужикам, а сами идем на мейкап
     SEM_WAIT(p->semid, MUTEX);  // блок
   }
 
@@ -72,10 +72,10 @@ STATUS_CODE man_wants_to_enter(data_t* p) {
   }
   SEM_WAIT(p->semid, MUTEX);
 
-  // используем спин-лок
+  // используем типа спин-лок
   while (p->state == 'W' || p->cur_cnt >= p->N) {
     SEM_POST(p->semid, MUTEX);  // разблок мьютекса
-    // SEM_WAIT(p->semid, MAN);  // так уж и быть, отдаем ванную комнату мужикам
+    SEM_WAIT(p->semid, MAN);  // так уж и быть, отдаем ванную комнату женщинам, а сами идем в фортнайт
     SEM_WAIT(p->semid, MUTEX);  // блок
   }
 
@@ -103,10 +103,11 @@ STATUS_CODE woman_leaves(data_t* p) {
     // сбрасываем все до заводских
     // semctl(p->semid, MUTEX, SETVAL, 1);
     // semctl(p->semid, MAN, SETVAL, p->N);
+    // SEM_POST(p->semid, MAN);
     // semctl(p->semid, WOMAN, SETVAL, 0);
-    // for (int i = 0; i < p->N; i++) {
-    //   SEM_POST(p->semid, MAN);
-    // }
+    for (int i = 0; i < p->N; i++) {
+      SEM_POST(p->semid, MAN);
+    }
   }
 
   SEM_POST(p->semid, MUTEX);
@@ -127,11 +128,11 @@ STATUS_CODE man_leaves(data_t* p) {
     // SEM_POST(p->semid, WOMAN);
 
     // сбрасываем все до заводских
-    semctl(p->semid, WOMAN, SETVAL, p->N);
-
-    //   for (int i = 0; i < p->N; i++) {
-    //     SEM_POST(p->semid, WOMAN);
-    // }
+    // semctl(p->semid, WOMAN, SETVAL, p->N);
+    // SEM_POST(p->semid, WOMAN);
+    for (int i = 0; i < p->N; i++) {
+      SEM_POST(p->semid, WOMAN);
+    }
   }
 
   SEM_POST(p->semid, MUTEX);
