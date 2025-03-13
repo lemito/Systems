@@ -92,7 +92,7 @@ STATUS_CODE cmd_check(char *cpy) {
   return SUCCESS;
 }
 
-int main(const int argc, const char* argv[]) {
+int main(const int argc, const char *argv[]) {
   if (argc != 2) {
     printf("Используй %s <файл>\n", argv[0]);
     return INPUT_ERROR;
@@ -199,7 +199,8 @@ int main(const int argc, const char* argv[]) {
   }
 
   // чтение с сервера
-  if (msgrcv(server_qid, &server_msg, sizeof(server_msg.data), my_pid, 0) == -1) {
+  if (msgrcv(server_qid, &server_msg, sizeof(server_msg.data), my_pid, 0) ==
+      -1) {
     perror("server_qid msgrcv");
     FREE_AND_NULL(line);
     FCLOSE(file);

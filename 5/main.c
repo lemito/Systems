@@ -54,7 +54,8 @@ STATUS_CODE woman_wants_to_enter(data_t* p) {
   // используем типа спин-лок
   while (p->state == 'M' || p->cur_cnt >= p->N) {
     SEM_POST(p->semid, MUTEX);  // разблок мьютекса
-    SEM_WAIT(p->semid, WOMAN);  // так уж и быть, отдаем ванную комнату мужикам, а сами идем на мейкап
+    SEM_WAIT(p->semid, WOMAN);  // так уж и быть, отдаем ванную комнату мужикам,
+                                // а сами идем на мейкап
     SEM_WAIT(p->semid, MUTEX);  // блок
   }
 
@@ -75,7 +76,8 @@ STATUS_CODE man_wants_to_enter(data_t* p) {
   // используем типа спин-лок
   while (p->state == 'W' || p->cur_cnt >= p->N) {
     SEM_POST(p->semid, MUTEX);  // разблок мьютекса
-    SEM_WAIT(p->semid, MAN);  // так уж и быть, отдаем ванную комнату женщинам, а сами идем в фортнайт
+    SEM_WAIT(p->semid, MAN);  // так уж и быть, отдаем ванную комнату женщинам,
+                              // а сами идем в фортнайт
     SEM_WAIT(p->semid, MUTEX);  // блок
   }
 
@@ -101,12 +103,13 @@ STATUS_CODE woman_leaves(data_t* p) {
     // SEM_POST(p->semid, MAN);
 
     // сбрасываем все до заводских
-    // semctl(p->semid, MUTEX, SETVAL, 1);
-    // semctl(p->semid, MAN, SETVAL, p->N);
-    // SEM_POST(p->semid, MAN);
-    // semctl(p->semid, WOMAN, SETVAL, 0);
-    for (int i = 0; i < p->N; i++) {
-      SEM_POST(p->semid, MAN);
+    // for (int i = 0; i < p->N; i++) {
+    //   SEM_POST(p->semid, MAN);
+    // }
+    int st = semctl(p->semid, MAN, SETVAL, p->N - 1);
+    if (st == -1) {
+      perror("semctl");
+      return SEM_ERR;
     }
   }
 
@@ -128,10 +131,14 @@ STATUS_CODE man_leaves(data_t* p) {
     // SEM_POST(p->semid, WOMAN);
 
     // сбрасываем все до заводских
-    // semctl(p->semid, WOMAN, SETVAL, p->N);
     // SEM_POST(p->semid, WOMAN);
-    for (int i = 0; i < p->N; i++) {
-      SEM_POST(p->semid, WOMAN);
+    // for (int i = 0; i < p->N; i++) {
+    //   SEM_POST(p->semid, WOMAN);
+    // }
+    int st = semctl(p->semid, WOMAN, SETVAL, p->N - 1);
+    if (st == -1) {
+      perror("semctl");
+      return SEM_ERR;
     }
   }
 
@@ -143,23 +150,21 @@ void* work(void* p) {
   if (p == NULL) {
     return NULL;
   }
-
-  // TODO: мб сделать чтобы не случайно выбирался пол, а из массива
-  // char cur_gender = (rand() % 2 == 0) ? 'M' : 'W';
+  int st;
   data_t* targ = (data_t*)p;
-  // switch (cur_gender) {
-  //   case 'M': {
-  man_wants_to_enter(targ);
+
+  st = man_wants_to_enter(targ);
+  if (st != SUCCESS) {
+    return NULL;
+  }
+
   sleep(rand() % 3);
-  man_leaves(targ);
-  //   } break;
-  //   case 'W': {
-  //     woman_wants_to_enter(targ);
-  //     sleep(rand() % 3);
-  //     woman_leaves(targ);
-  //   } break;
-  // }
-  // printf("bbb\n");
+
+  st = man_leaves(targ);
+  if (st != SUCCESS) {
+    return NULL;
+  }
+
   return NULL;
 }
 
@@ -168,8 +173,7 @@ void* work2(void* p) {
     return NULL;
   }
   data_t* targ = (data_t*)p;
-  // TODO: мб сделать чтобы не случайно выбирался пол, а из массива
-  // char cur_gender = (rand() % 2 == 0) ? 'M' : 'W';
+  int st;
   // data_t* targ = (data_t*)p;
   // switch (cur_gender) {
   //   case 'M': {
@@ -178,9 +182,17 @@ void* work2(void* p) {
   //     man_leaves(targ);
   //   } break;
   //   case 'W': {
-  woman_wants_to_enter(targ);
+  st = woman_wants_to_enter(targ);
+  if (st != SUCCESS) {
+    return NULL;
+  }
+
   sleep(rand() % 3);
-  woman_leaves(targ);
+
+  st = woman_leaves(targ);
+  if (st != SUCCESS) {
+    return NULL;
+  }
   //   } break;
   // }
   // printf("bbb\n");
@@ -203,16 +215,6 @@ int main(void) {
 
   srand(time(NULL));
 
-  // printf("Введи общее количество человек >> ");
-  // st = scanf("%d", &PEOPLES);
-  // if (st != 1) {
-  //   printf("Невалидное число - ожидалось int");
-  //   return INPUT_ERROR;
-  // }
-  // if (PEOPLES <= 0) {
-  //   printf("Должно быть людей >0\n");
-  //   return INPUT_ERROR;
-  // }
   printf("Введи общее количество мужчин >> ");
   st = scanf("%d", &man);
   if (st != 1) {
@@ -309,6 +311,10 @@ int main(void) {
   }
 
   FREE_AND_NULL(sim);
-  semctl(semid, 0, IPC_RMID, 0);
+  st = semctl(semid, 0, IPC_RMID, 0);
+  if (st == -1) {
+    perror("semctl");
+    return SEM_ERR;
+  }
   return 0;
 }

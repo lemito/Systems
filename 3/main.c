@@ -141,11 +141,11 @@ int main(void) {
     st = scanf("%d", &PHILOSOPHER_CNT);
     if (st != 1) {
       printf("Введи натуральное целое чисоло\n");
-      return INPUT_ERROR;
+      // return INPUT_ERROR;
     }
     if (PHILOSOPHER_CNT <= 0) {
       printf("Введи натуральное целое чисоло\n");
-      return INPUT_ERROR;
+      // return INPUT_ERROR;
     }
 
     break;

@@ -6,16 +6,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include <threads.h>
 #include <time.h>
 
 #include "../include//base.h"
-#include <sys/types.h>
 
 struct user_info {
   char name[7];
-  int PIN;       // unsigned
-  ssize_t limit; // -1 - лимита нет, иначе число
+  int PIN;        // unsigned
+  ssize_t limit;  // -1 - лимита нет, иначе число
   size_t cmd_cnt;
 };
 
@@ -32,15 +32,17 @@ void help(void) {
   puts("0) Exit - завершить прогу");
   puts("1) Time - запрос текущего времени в стандартном формате чч:мм:сс");
   puts("2) Date - запрос текущей даты в стандартном формате дд:мм:гггг");
-  puts("3) Howmuch <time> flag - запрос прошедшего времени с указанной даты в "
-       "параметре <time>, параметр flag определяет тип представления "
-       "результата (-s в секундах, -m в минутах, -h в часах, -y в годах)");
+  puts(
+      "3) Howmuch <time> flag - запрос прошедшего времени с указанной даты в "
+      "параметре <time>, параметр flag определяет тип представления "
+      "результата (-s в секундах, -m в минутах, -h в часах, -y в годах)");
   puts("4) Logout - выйти в меню авторизации");
-  puts("5) Sanctions username<number> - команда позволяет ввести ограничения  "
-       "на работу с оболочкой для пользователя username а именно данный "
-       "пользователь не может в одном сеансе выполнить более<number> "
-       "запросов.Для подтверждения ограничений после ввода команды необходимо "
-       "ввести значение 12345.");
+  puts(
+      "5) Sanctions username<number> - команда позволяет ввести ограничения  "
+      "на работу с оболочкой для пользователя username а именно данный "
+      "пользователь не может в одном сеансе выполнить более<number> "
+      "запросов.Для подтверждения ограничений после ввода команды необходимо "
+      "ввести значение 12345.");
 }
 
 // валидация пина
@@ -68,34 +70,34 @@ __uint8_t time_check(const int day, const int month, const int year) {
     return 0;
   }
 
-  char flag = 0; // дней в текущем месяце
+  char flag = 0;  // дней в текущем месяце
 
   switch (month) {
-  case 1:
-  case 3:
-  case 5:
-  case 7:
-  case 8:
-  case 10:
-  case 12: {
-    flag = 31;
-  } break;
-  case 4:
-  case 6:
-  case 9:
-  case 11: {
-    flag = 30;
-  } break;
-  case 2: {
-    if ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)) {
-      flag = 29;
-    } else {
-      flag = 28;
-    }
-  } break;
-  default: {
-    return 0;
-  } break;
+    case 1:
+    case 3:
+    case 5:
+    case 7:
+    case 8:
+    case 10:
+    case 12: {
+      flag = 31;
+    } break;
+    case 4:
+    case 6:
+    case 9:
+    case 11: {
+      flag = 30;
+    } break;
+    case 2: {
+      if ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)) {
+        flag = 29;
+      } else {
+        flag = 28;
+      }
+    } break;
+    default: {
+      return 0;
+    } break;
   }
   if (day <= 0 || day > flag) {
     return 0;
@@ -117,14 +119,15 @@ STATUS_CODE sign_in_up(db_t *const db, user_t **res_user) {
   if (db == NULL) {
     return NULL_PTR;
   }
-  char mode = 0; // 0 - вхлд; 1 - рега
+  char mode = 0;  // 0 - вхлд; 1 - рега
   int iput_pin = 0;
   char buffer[27];
   int st = 0;
   user_t *user = NULL;
 
-  printf("Необходимо войти или зарегистрироваться:\nLogin - Вход\nRegister - "
-         "Регистрация\n");
+  printf(
+      "Необходимо войти или зарегистрироваться:\nLogin - Вход\nRegister - "
+      "Регистрация\n");
   for (;;) {
     st = scanf("%26s", buffer);
     CLEAR_BUF();
@@ -139,8 +142,9 @@ STATUS_CODE sign_in_up(db_t *const db, user_t **res_user) {
     }
 
     printf("Ошибка ввода.\n");
-    printf("Необходимо войти или зарегистрироваться:\nLogin - Вход\nRegister - "
-           "Регистрация\n");
+    printf(
+        "Необходимо войти или зарегистрироваться:\nLogin - Вход\nRegister - "
+        "Регистрация\n");
   }
 
   if (strcmp(buffer, "Login") == 0) {
@@ -151,152 +155,152 @@ STATUS_CODE sign_in_up(db_t *const db, user_t **res_user) {
   buffer[0] = '\0';
 
   switch (mode) {
-  // вход
-  case '0': {
-    for (;;) {
-      printf("Введи имя пользователя(login): ");
+    // вход
+    case '0': {
+      for (;;) {
+        printf("Введи имя пользователя(login): ");
 
-      st = scanf("%26s", buffer);
-      CLEAR_BUF();
-      if (st == -1) {
-        printf("Ошибка!!!!\n");
-        continue;
-      }
-      if (strlen(buffer) > 7) {
-        printf("Упсик... Ток 6 символов можно :(\n");
-        continue;
-      }
-      if (0 == check_login(buffer)) {
-        printf("Ошибка!!!! Используй латиницу и циферки\n");
-        continue;
-      }
+        st = scanf("%26s", buffer);
+        CLEAR_BUF();
+        if (st == -1) {
+          printf("Ошибка!!!!\n");
+          continue;
+        }
+        if (strlen(buffer) > 7) {
+          printf("Упсик... Ток 6 символов можно :(\n");
+          continue;
+        }
+        if (0 == check_login(buffer)) {
+          printf("Ошибка!!!! Используй латиницу и циферки\n");
+          continue;
+        }
 
-      if ((user = user_is_contain(db, buffer)) == NULL) {
-        printf("Такого пользователя нет! Советую зарегаться\n");
-        return USER_NOT_CONTAIN;
+        if ((user = user_is_contain(db, buffer)) == NULL) {
+          printf("Такого пользователя нет! Советую зарегаться\n");
+          return USER_NOT_CONTAIN;
+          break;
+        }
+        printf("Мяу, %s!\n", buffer);
         break;
       }
-      printf("Мяу, %s!\n", buffer);
-      break;
-    }
-    for (;;) {
-      printf("Введите пароль: ");
-      st = scanf("%d", &iput_pin);
-      CLEAR_BUF();
-      if (st == -1) {
-        printf("Ошибка!!!!\n");
-        continue;
-      }
-      if (check_pin(iput_pin) == 0) {
-        printf("Ошибка!!!! Используй пин из [0, 100000]\n");
-        continue;
-      }
+      for (;;) {
+        printf("Введите пароль: ");
+        st = scanf("%d", &iput_pin);
+        CLEAR_BUF();
+        if (st == -1) {
+          printf("Ошибка!!!!\n");
+          continue;
+        }
+        if (check_pin(iput_pin) == 0) {
+          printf("Ошибка!!!! Используй пин из [0, 100000]\n");
+          continue;
+        }
 
-      if (user->PIN != iput_pin) {
-        printf("Упсик, неправильный PIN\n");
-        continue;
-      }
+        if (user->PIN != iput_pin) {
+          printf("Упсик, неправильный PIN\n");
+          continue;
+        }
 
-      printf("Добро пожаловать\n");
-      break;
-    }
-    if (user->limit != -1) {
-      printf("Ой-ой. У вас есть лимит по командам = %ld\n", user->limit);
-    }
-    *res_user = user;
-  } break;
-  // рега
-  case '1': {
-    for (;;) {
-      printf("Введи имя пользователя(login): ");
-
-      st = scanf("%26s", buffer);
-      CLEAR_BUF();
-      if (st == -1) {
-        printf("Ошибка!!!!\n");
-        continue;
-      }
-      if (strlen(buffer) > 7) {
-        printf("Упсик... Ток 6 символов можно :(\n");
-        continue;
-      }
-      if (0 == check_login(buffer)) {
-        printf("Ошибка!!!! Используй латиницу и циферки\n");
-        continue;
-      }
-
-      if ((user = user_is_contain(db, buffer)) != NULL) {
-        printf("Пользователь с логином %s уже есть, попробуй другой логин\n",
-               user->name);
-        return USER_IS_CONTAIN;
+        printf("Добро пожаловать\n");
         break;
       }
-      printf("Мяу, %s!\n", buffer);
-      break;
-    }
-    for (;;) {
-      printf("Введите пароль: ");
-      st = scanf("%d", &iput_pin);
-      CLEAR_BUF();
-      if (st == -1) {
-        printf("Ошибка!!!!\n");
-        continue;
+      if (user->limit != -1) {
+        printf("Ой-ой. У вас есть лимит по командам = %ld\n", user->limit);
       }
-      if (check_pin(iput_pin) == 0) {
-        printf("Ошибка!!!! Используй пин из [0, 100000]\n");
-        continue;
-      }
+      *res_user = user;
+    } break;
+    // рега
+    case '1': {
+      for (;;) {
+        printf("Введи имя пользователя(login): ");
 
-      break;
-    }
-    user_t *new_user = (user_t *)malloc(sizeof(user_t));
-    new_user->limit = -1;
-    new_user->cmd_cnt = 0;
-    new_user->PIN = iput_pin;
-    strcpy(new_user->name, buffer);
-    user_t **tmp = realloc(db->data, sizeof(user_t *) * (db->size + 1));
-    if (tmp == NULL) {
-      return MEMORY_ERROR;
-    }
-    db->data = tmp;
-    db->data[db->size++] = new_user;
-    printf("Ураааааа! Счастливого пользования!\n");
-    *res_user = new_user;
-  } break;
-  default: {
-  } break;
+        st = scanf("%26s", buffer);
+        CLEAR_BUF();
+        if (st == -1) {
+          printf("Ошибка!!!!\n");
+          continue;
+        }
+        if (strlen(buffer) > 7) {
+          printf("Упсик... Ток 6 символов можно :(\n");
+          continue;
+        }
+        if (0 == check_login(buffer)) {
+          printf("Ошибка!!!! Используй латиницу и циферки\n");
+          continue;
+        }
+
+        if ((user = user_is_contain(db, buffer)) != NULL) {
+          printf("Пользователь с логином %s уже есть, попробуй другой логин\n",
+                 user->name);
+          return USER_IS_CONTAIN;
+          break;
+        }
+        printf("Мяу, %s!\n", buffer);
+        break;
+      }
+      for (;;) {
+        printf("Введите пароль: ");
+        st = scanf("%d", &iput_pin);
+        CLEAR_BUF();
+        if (st == -1) {
+          printf("Ошибка!!!!\n");
+          continue;
+        }
+        if (check_pin(iput_pin) == 0) {
+          printf("Ошибка!!!! Используй пин из [0, 100000]\n");
+          continue;
+        }
+
+        break;
+      }
+      user_t *new_user = (user_t *)malloc(sizeof(user_t));
+      new_user->limit = -1;
+      new_user->cmd_cnt = 0;
+      new_user->PIN = iput_pin;
+      strcpy(new_user->name, buffer);
+      user_t **tmp = realloc(db->data, sizeof(user_t *) * (db->size + 1));
+      if (tmp == NULL) {
+        return MEMORY_ERROR;
+      }
+      db->data = tmp;
+      db->data[db->size++] = new_user;
+      printf("Ураааааа! Счастливого пользования!\n");
+      *res_user = new_user;
+    } break;
+    default: {
+    } break;
   }
 
   return SUCCESS;
 }
 
 STATUS_CODE get_time(void) {
-  const time_t t = time(NULL); // UNIX времечко
+  const time_t t = time(NULL);  // UNIX времечко
   if (t == -1) {
     return INPUT_ERROR;
   }
-  const struct tm tm = *localtime(&t); // времечко UNIX -> структура
+  const struct tm tm = *localtime(&t);  // времечко UNIX -> структура
   printf("%02d:%02d:%02d\n", tm.tm_hour, tm.tm_min, tm.tm_sec);
   return SUCCESS;
 }
 
 STATUS_CODE get_date(void) {
-  const time_t t = time(NULL); // UNIX времечко
+  const time_t t = time(NULL);  // UNIX времечко
   if (t == -1) {
     return INPUT_ERROR;
   }
-  const struct tm tm = *localtime(&t); // времечко UNIX -> структура
+  const struct tm tm = *localtime(&t);  // времечко UNIX -> структура
   printf("%02d:%02d:%d\n", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900);
   return SUCCESS;
 }
 
 STATUS_CODE howmuch(const int day, const int month, const int year,
                     const char flag) {
-  const time_t cur_t = time(NULL); // UNIX времечко
+  const time_t cur_t = time(NULL);  // UNIX времечко
   if (cur_t == -1) {
     return INPUT_ERROR;
   }
-  const struct tm cur_tm = *localtime(&cur_t); // времечко UNIX -> структура
+  const struct tm cur_tm = *localtime(&cur_t);  // времечко UNIX -> структура
 
   struct tm tm;
   tm.tm_year = year - 1900;
@@ -313,25 +317,25 @@ STATUS_CODE howmuch(const int day, const int month, const int year,
 
   double diff = difftime(cur_t, end);
   switch (flag) {
-  case 's': {
-    printf("Разница в секундах == %lld\n", (long long)diff);
-  } break;
-  case 'm': {
-    diff /= 60;
-    printf("Разница в минутах == %lld\n", (long long)diff);
-  } break;
-  case 'h': {
-    diff /= 3600;
-    printf("Разница в часах == %lld\n", (long long)diff);
-  } break;
-  case 'y': {
-    diff /= (3600 * 24 * 365);
-    // const long years = cur_tm.tm_year - tm.tm_year;
-    printf("Разница в годах == %lld\n", (long long)diff);
-  } break;
-  default: {
-    printf("Нет такого флага!");
-  };
+    case 's': {
+      printf("Разница в секундах == %lld\n", (long long)diff);
+    } break;
+    case 'm': {
+      diff /= 60;
+      printf("Разница в минутах == %lld\n", (long long)diff);
+    } break;
+    case 'h': {
+      diff /= 3600;
+      printf("Разница в часах == %lld\n", (long long)diff);
+    } break;
+    case 'y': {
+      diff /= (3600 * 24 * 365);
+      // const long years = cur_tm.tm_year - tm.tm_year;
+      printf("Разница в годах == %lld\n", (long long)diff);
+    } break;
+    default: {
+      printf("Нет такого флага!");
+    };
   }
 
   return SUCCESS;

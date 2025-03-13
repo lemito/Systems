@@ -43,6 +43,7 @@ STATUS_CODE cmd_check(char *cpy) {
   return SUCCESS;
 }
 
+// здесь могла быть хэш0табличка или список, но будет дин. массив
 typedef struct db {
   pid_t *data;
   size_t siz;
@@ -56,6 +57,9 @@ typedef struct db {
 STATUS_CODE check_or_insert(db_t *db, pid_t pid) {
   if (NULL == db) {
     return NULL_PTR;
+  }
+  if (db->siz == 0 || db->cap == 0) {
+    return INPUT_ERROR;
   }
 
   for (size_t i = 0; i < db->siz; i++) {
@@ -78,6 +82,15 @@ STATUS_CODE check_or_insert(db_t *db, pid_t pid) {
   return INSERTED;
 }
 
+STATUS_CODE db_remove(db_t *db) {
+  if (db == NULL) {
+    return NULL_PTR;
+  }
+  db->cap = db->siz = 0;
+  FREE_AND_NULL(db->data);
+  return SUCCESS;
+}
+
 int main() {
   key_t msgq_key;
   int qid;
@@ -92,7 +105,7 @@ int main() {
 
   if ((msgq_key = ftok(MSGQ_KEY, PROJECT_ID)) == -1) {
     perror("ftok msgq_key\n");
-    FREE_AND_NULL(db.data);
+    db_remove(&db);
     return INPUT_ERROR;
   }
 
@@ -104,7 +117,7 @@ int main() {
       qid = msgget(msgq_key, 0666 | IPC_CREAT);
       if (qid == -1) {
         perror("msgget server_qid\n");
-        FREE_AND_NULL(db.data);
+        db_remove(&db);
         return INPUT_ERROR;
       }
     }
@@ -168,7 +181,7 @@ int main() {
 
     if (msgrcv(qid, &msgq, sizeof(msgq.data), 0, 0) == -1) {
       perror("msgsrv qid");
-      FREE_AND_NULL(db.data);
+      db_remove(&db);
       return INPUT_ERROR;
     }
 
@@ -177,16 +190,16 @@ int main() {
 
     int check_st = check_or_insert(&db, msgq.msg_type);
     if (check_st == MEMORY_ERROR) {
-      FREE_AND_NULL(db.data);
+      db_remove(&db);
       return MEMORY_ERROR;
     } else if (check_st == NULL_PTR) {
-      FREE_AND_NULL(db.data);
+      db_remove(&db);
       return NULL_PTR;
     }
 
     char *cpy = strdup(msgq.data.buf);
     if (cpy == NULL) {
-      FREE_AND_NULL(db.data);
+      db_remove(&db);
       return MEMORY_ERROR;
     }
 
@@ -200,7 +213,7 @@ int main() {
       if (msgsnd(msgq.data.qid, &msgq, sizeof(msgq.data), 0) == -1) {
         perror("client_qid msgsnd");
         FREE_AND_NULL(cpy);
-        FREE_AND_NULL(db.data);
+        db_remove(&db);
 
         return INPUT_ERROR;
       }
@@ -209,7 +222,7 @@ int main() {
 
     cpy = strdup(msgq.data.buf);
     if (cpy == NULL) {
-      FREE_AND_NULL(db.data);
+      db_remove(&db);
       return MEMORY_ERROR;
     }
 
@@ -320,12 +333,12 @@ int main() {
   for (size_t i = 0; i < db.siz; i++) {
     if (msgsnd(db.data[i], &msgq, sizeof(msgq.data), 0) == -1) {
       perror("client_qid db.data[i] msgsnd after work");
-      FREE_AND_NULL(db.data);
+      db_remove(&db);
       return INPUT_ERROR;
     }
   }
 
   printf("%s\n", buf);
-
+  db_remove(&db);
   return 0;
 }
