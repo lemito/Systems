@@ -54,11 +54,11 @@ typedef struct db {
 #define INSERTED (~6)
 #define FINDED (~5)
 
-STATUS_CODE check_or_insert(db_t *db, pid_t pid) {
+STATUS_CODE check_or_insert(db_t *db, const pid_t pid) {
   if (NULL == db) {
     return NULL_PTR;
   }
-  if (db->siz == 0 || db->cap == 0) {
+  if (db->siz == 0 || db->cap == 0 || db->data == NULL) {
     return INPUT_ERROR;
   }
 
@@ -188,11 +188,11 @@ int main() {
     printf("Сейчас мы работаем с клиентом №%ld и обрабатываем %s\n",
            msgq.msg_type, msgq.data.buf);
 
-    int check_st = check_or_insert(&db, msgq.msg_type);
+    const int check_st = check_or_insert(&db, msgq.msg_type);
     if (check_st == MEMORY_ERROR) {
       db_remove(&db);
       return MEMORY_ERROR;
-    } else if (check_st == NULL_PTR) {
+    }if (check_st == NULL_PTR) {
       db_remove(&db);
       return NULL_PTR;
     }

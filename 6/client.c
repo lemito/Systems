@@ -74,7 +74,7 @@ int main(const int argc, char **argv) {
   if (cleaner != -1) {
     shmctl(cleaner, IPC_RMID, NULL);
   }
-  int shm = shmget(skey, to_sharing, IPC_CREAT | IPC_EXCL | 0666);
+  const int shm = shmget(skey, to_sharing, IPC_CREAT | IPC_EXCL | 0666);
   if (shm == -1) {
     fprintf(stderr, "shmget data");
     return (MEMORY_ERROR);

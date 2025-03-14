@@ -47,6 +47,9 @@ STATUS_CODE sem_op(const int semid, const int sem_ix, const short op) {
 #define SEM_POST(semid, semix) sem_op((semid), (semix), +1)
 
 void *WORKER(void *p) {
+  if (p == NULL) {
+    return NULL;
+  }
   const int semid = ((useful_things *)p)->semid;
   const int philo_id = ((useful_things *)p)->philo_id;
   const int N = ((useful_things *)p)->cnt;

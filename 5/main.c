@@ -9,6 +9,7 @@
 
 #define SEM_NAME "/home/lemito/Desktop/my_sems/bath_sem"
 
+#define FULL_SEM_STATE (p->N - 1)
 #define MUTEX 0
 #define MAN 1
 #define WOMAN 2
@@ -106,7 +107,7 @@ STATUS_CODE woman_leaves(data_t* p) {
     // for (int i = 0; i < p->N; i++) {
     //   SEM_POST(p->semid, MAN);
     // }
-    int st = semctl(p->semid, MAN, SETVAL, p->N - 1);
+    int st = semctl(p->semid, MAN, SETVAL, FULL_SEM_STATE);
     if (st == -1) {
       perror("semctl");
       return SEM_ERR;
@@ -135,7 +136,7 @@ STATUS_CODE man_leaves(data_t* p) {
     // for (int i = 0; i < p->N; i++) {
     //   SEM_POST(p->semid, WOMAN);
     // }
-    int st = semctl(p->semid, WOMAN, SETVAL, p->N - 1);
+    int st = semctl(p->semid, WOMAN, SETVAL, FULL_SEM_STATE);
     if (st == -1) {
       perror("semctl");
       return SEM_ERR;
@@ -150,10 +151,9 @@ void* work(void* p) {
   if (p == NULL) {
     return NULL;
   }
-  int st;
   data_t* targ = (data_t*)p;
 
-  st = man_wants_to_enter(targ);
+  int st = man_wants_to_enter(targ);
   if (st != SUCCESS) {
     return NULL;
   }
@@ -173,7 +173,6 @@ void* work2(void* p) {
     return NULL;
   }
   data_t* targ = (data_t*)p;
-  int st;
   // data_t* targ = (data_t*)p;
   // switch (cur_gender) {
   //   case 'M': {
@@ -182,7 +181,7 @@ void* work2(void* p) {
   //     man_leaves(targ);
   //   } break;
   //   case 'W': {
-  st = woman_wants_to_enter(targ);
+  int st = woman_wants_to_enter(targ);
   if (st != SUCCESS) {
     return NULL;
   }
@@ -267,7 +266,7 @@ int main(void) {
     semctl(semid, i, SETVAL, arg);
   }
 
-  int PEOPLES = man + woman;
+  const int PEOPLES = man + woman;
 
   sim = (pthread_t*)malloc(sizeof(pthread_t) * PEOPLES);
   if (sim == NULL) {
