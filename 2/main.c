@@ -159,7 +159,7 @@ STATUS_CODE xor5(FILE *file) {
         one[i] = 0x00;
       }
     }
-    for (size_t i = 0; i < 4; i++) {
+    for (size_t i = 0; i < sizeof(one); i++) {
       res.bytes[i] ^= one[i];
     }
   }
@@ -191,7 +191,7 @@ STATUS_CODE xor6(FILE *file) {
         one[i] = 0x00;
       }
     }
-    for (size_t i = 0; i < 4; i++) {
+    for (size_t i = 0; i < sizeof(one); i++) {
       res.bytes[i] ^= one[i];
     }
   }
