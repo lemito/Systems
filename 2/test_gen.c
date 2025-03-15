@@ -7,7 +7,7 @@
 
 #define SEED 27022005
 #define N 100
-#define MASK_NUM 0x27
+#define MASK_NUM 0x16
 
 int main(void) {
   FILE *fp = fopen("meow.txt", "wb");

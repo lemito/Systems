@@ -91,7 +91,6 @@ void *WORKER(void *p) {
         printf("Не удалось взять вилку\n");
       }
     }
-
     printf("Нямно покушал %d\n", philo_id);
     sleep(1);
 
