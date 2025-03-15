@@ -177,10 +177,11 @@ STATUS_CODE sign_in_up(db_t *const db, user_t **res_user) {
 
         if ((user = user_is_contain(db, buffer)) == NULL) {
           printf("Такого пользователя нет! Советую зарегаться\n");
-          return USER_NOT_CONTAIN;
-          break;
+          continue;
+          // return USER_NOT_CONTAIN;
+          // break;
         }
-        printf("Мяу, %s!\n", buffer);
+        printf("Мяу (login), %s!\n", buffer);
         break;
       }
       for (;;) {
@@ -232,8 +233,9 @@ STATUS_CODE sign_in_up(db_t *const db, user_t **res_user) {
         if ((user = user_is_contain(db, buffer)) != NULL) {
           printf("Пользователь с логином %s уже есть, попробуй другой логин\n",
                  user->name);
-          return USER_IS_CONTAIN;
-          break;
+          continue;
+          // return USER_IS_CONTAIN;
+          // break;
         }
         printf("Мяу, %s!\n", buffer);
         break;
@@ -316,6 +318,9 @@ STATUS_CODE howmuch(const int day, const int month, const int year,
   const time_t end = mktime(&tm);
 
   double diff = difftime(cur_t, end);
+  if (diff < 0 + 0.00001) {
+    return INPUT_ERROR;
+  }
   switch (flag) {
     case 's': {
       printf("Разница в секундах == %lld\n", (long long)diff);
@@ -357,7 +362,7 @@ STATUS_CODE upload_db(db_t *db, FILE *file) {
 
     size_t st = fread(user, sizeof(user_t), 1, file);
     if (st != 1) {
-      free(user);
+      FREE_AND_NULL(user);
       if (feof(file)) {
         break;
       }
@@ -366,7 +371,7 @@ STATUS_CODE upload_db(db_t *db, FILE *file) {
 
     user_t **tmp = realloc(db->data, (db->size + 1) * sizeof(user_t *));
     if (!tmp) {
-      free(user);
+      FREE_AND_NULL(user);
       return MEMORY_ERROR;
     }
 
@@ -408,27 +413,27 @@ int main(void) {
 
   // db.data = malloc(sizeof(user_t));
   // if (db.data == NULL) {
-  //     fclose(db_file);
+  //     FCLOSE(db_file);
   //     return MEMORY_ERROR;
   // }
   db.data = NULL;
   db.size = 0;
 
   if (SUCCESS != upload_db(&db, db_file)) {
-    fclose(db_file);
-    free(db.data);
+    FCLOSE(db_file);
+    FREE_AND_NULL(db.data);
     return 1;
   }
-  fclose(db_file);
+  FCLOSE(db_file);
 
   /* приветствие: входрега */
   if (sign_in_up(&db, &user) != SUCCESS) {
-    free(db.data);
+    FREE_AND_NULL(db.data);
     return 1;
   }
 
   if (user == NULL) {
-    free(db.data);
+    FREE_AND_NULL(db.data);
     return NULL_PTR;
   }
 
@@ -485,15 +490,16 @@ int main(void) {
         user->cmd_cnt++;
       }
     } else if (strcmp(buffer, "Logout") == 0) {
-      if (sign_in_up(&db, &user) != SUCCESS) {
-        free(db.data);
-        fclose(db_file);
+      st = sign_in_up(&db, &user);
+      if (st == NULL_PTR || st == MEMORY_ERROR) {
+        FREE_AND_NULL(db.data);
+        FCLOSE(db_file);
         return 1;
       }
 
       if (user == NULL) {
-        free(db.data);
-        fclose(db_file);
+        FREE_AND_NULL(db.data);
+        FCLOSE(db_file);
         return NULL_PTR;
       }
       if (user->limit != -1) {
@@ -569,15 +575,15 @@ int main(void) {
 
   db_file = fopen("users.db", "wb");
   if (SUCCESS != save_db(&db, db_file)) {
-    fclose(db_file);
-    free(db.data);
+    FCLOSE(db_file);
+    FREE_AND_NULL(db.data);
     return 1;
   }
 
   for (size_t i = 0; i < db.size; i++) {
-    free(db.data[i]);
+    FREE_AND_NULL(db.data[i]);
   }
-  free(db.data);
-  fclose(db_file);
+  FREE_AND_NULL(db.data);
+  FCLOSE(db_file);
   return 0;
 }
