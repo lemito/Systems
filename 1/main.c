@@ -21,6 +21,7 @@ struct user_info {
 
 typedef struct user_info user_t;
 
+// TODO: <идея по улучшению> тут могла быть хэш-таблица, но массив с поиском O(n) (все-равно ток первый пак)
 struct db_t {
   user_t **data;
   size_t size;
