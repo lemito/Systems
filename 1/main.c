@@ -256,7 +256,7 @@ STATUS_CODE sign_in_up(db_t *const db, user_t **res_user) {
 
         break;
       }
-      user_t *new_user = (user_t *)malloc(sizeof(user_t));
+      user_t *new_user = (user_t *)calloc(1, sizeof(user_t));
       new_user->limit = -1;
       new_user->cmd_cnt = 0;
       new_user->PIN = iput_pin;
